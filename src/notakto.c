@@ -1,5 +1,6 @@
 // Initialize curses & start game
 #include <ncurses.h>
+#include "game_windows.h"
 
 int main(void)
 {
@@ -10,7 +11,8 @@ int main(void)
     curs_set(0);
     keypad(stdscr, TRUE);
 
-    // ...
+    // Create windows used in game
+    create_windows();
 
     // End curses mode
     endwin();

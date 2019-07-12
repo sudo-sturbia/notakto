@@ -1,7 +1,7 @@
 # Makefile
 CC=gcc
 LDFLAGS=-lncurses 
-FILES=notakto.c
+FILES=notakto.c game_windows.c
 
 notakto: $(FILES)
 	@$(CC) $(FILES) -o notakto $(LDFLAGS)
