@@ -14,6 +14,9 @@ int main(void)
     // Create windows used in game
     create_windows();
 
+    print_logo();
+    getchar();
+
     // End curses mode
     endwin();
 

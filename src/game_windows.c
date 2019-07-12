@@ -3,7 +3,8 @@
 #include <string.h>
 
 /* DEFINITIONS */
-
+#define LOGO_WIDTH 62
+#define LOGO_HEIGHT 5
 
 /* WINDOWS */
 WINDOW *main_win;
@@ -19,6 +20,9 @@ void create_windows();
 void clear_windows();
 void destroy_windows();
 
+void print_logo();
+
+// Create windows used in game
 void create_windows()
 {
     // Get screen size
@@ -30,7 +34,7 @@ void create_windows()
 
     // Create logo window
     height = 9;
-    width = 64;
+    width = 65;
     y = rows - 9;
     x = 0;
 
@@ -38,9 +42,9 @@ void create_windows()
 
     // Create instructions window
     height = 9;
-    width = cols - 65;
+    width = cols - 66;
     y = rows - 9;
-    x = 65;
+    x = 66;
 
     instructions_win = newwin(height, width, y, x);
 
@@ -131,4 +135,63 @@ void destroy_windows()
     delwin(menu_win);
     delwin(error_win);
     delwin(status_win);
+}
+
+/* Printing functions */
+void print_logo()
+{
+    // Logo & author
+    // Logo is represented using an integer array where -> 0: ' ', 1: block, 2: |, 4: -
+    char *author = "by: sudo-sturbia";
+    int logo_arr[LOGO_HEIGHT][LOGO_WIDTH] = {{1, 1, 1, 2, 0, 0, 0, 1, 1, 2, 0, 1, 1, 1, 1, 1, 1, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 1, 1,
+                                              1, 1, 1, 2, 0, 1, 1, 2, 0, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 1, 1, 1, 1, 1, 1, 2, 0},
+                                             {1, 1, 1, 1, 2, 0, 0, 1, 1, 2, 1, 1, 2, 4, 4, 4, 1, 1, 2, 0, 4, 4, 1, 1, 2, 4, 4, 0, 1, 1, 2,
+                                              4, 4, 1, 1, 2, 1, 1, 2, 0, 1, 1, 2, 0, 0, 4, 4, 1, 1, 4, 4, 4, 0, 1, 1, 2, 4, 4, 4, 1, 1, 2},
+                                             {1, 1, 2, 1, 1, 2, 0, 1, 1, 2, 1, 1, 2, 0, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 1,
+                                              1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2},
+                                             {1, 1, 2, 0, 1, 1, 2, 1, 1, 2, 1, 1, 2, 0, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2,
+                                              4, 4, 1, 1, 2, 1, 1, 2, 4, 1, 1, 2, 0, 0, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2},
+                                             {1, 1, 2, 0, 0, 1, 1, 1, 1, 2, 0, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2,
+                                              0, 0, 1, 1, 2, 1, 1, 2, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 0}
+                                             };
+
+    // Screen size
+    int win_rows, win_cols;
+    win_rows = 9;
+    win_cols = 65;
+
+    // Print borders
+    box(logo_win, 0, 0);
+
+    // Print logo
+    for (int i = 0; i < LOGO_HEIGHT; i++)
+    {
+        for (int j = 0; j < LOGO_WIDTH; j++)
+        {
+            switch(logo_arr[i][j])
+            {
+                case 0:
+                    mvwaddch(logo_win, i + 2, j + 2, ' ');
+                    break;
+                case 1:
+                    mvwaddch(logo_win, i + 2, j + 2, ' ' | A_REVERSE);
+                    break;
+                case 2:
+                    mvwaddch(logo_win, i + 2, j + 2, '|');
+                    break;
+                case 4:
+                    mvwaddch(logo_win, i + 2, j + 2, '-');
+                    break;
+            }
+        }
+    }
+
+    // Print author
+    int y, x;
+    y = win_rows - 2;
+    x = win_cols - strlen(author) - 5;
+
+    mvwprintw(logo_win, y, x, "%s", author);
+
+    wrefresh(logo_win);
 }

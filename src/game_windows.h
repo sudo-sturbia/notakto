@@ -6,4 +6,6 @@ void create_windows();
 void clear_windows();
 void destroy_windows();
 
+void print_logo();
+
 #endif
