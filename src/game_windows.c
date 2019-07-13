@@ -1,4 +1,4 @@
-// Windows used in game
+/* Windows used in game */
 #include <ncurses.h>
 #include <string.h>
 
@@ -203,9 +203,9 @@ void print_instructions()
 {
     char *instructions[] = {" INSTRUCTIONS:",
                             "- To navigate use: ",
-                            "              k",
-                            "           h     l",
-                            "              j",
+                            "         k            ^",
+                            "      h     l  OR  <     >",
+                            "         j            v",
                             "- To use menu press ESC",
                             "- To quit press q"};
 

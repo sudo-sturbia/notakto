@@ -1,4 +1,4 @@
-// Initialize curses & start game
+/* Curses initialization & game start */
 #include <ncurses.h>
 #include "initialization.h"
 
@@ -6,6 +6,7 @@ int main(void)
 {
     // Start curses mode
     initscr();
+    refresh();
     noecho();
     cbreak();
     curs_set(0);

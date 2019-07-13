@@ -3,7 +3,13 @@
 
 /* FUNCTIONS */
 void init_game();
-int start();
-void print_options(char *prompt, char *highlighted[], char *not_highlighted[], int choice_size, int which);
+void initial_msg();
+
+int choose_mode();
+int playing_order();
+
+int navigate(int ch, int *which_pr);
+
+void print_options(char *prompt, char *highlighted[], char *not_highlighted[], int which);
 
 #endif

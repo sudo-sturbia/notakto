@@ -1,4 +1,4 @@
-// Initialization & game beginning choices
+/* Initialization & opening prompts */
 #include <ncurses.h>
 #include <string.h>
 #include "game_windows.h"
@@ -7,7 +7,9 @@
 #define HUMAN_MODE 0
 #define COMPU_MODE 1
 
-#define NO_OPTIONS 2              // Number of game beginning choices
+#define NO_OPTIONS 2              // Number of options in opening prompts
+
+#define CHOICE_BUTTON_SIZE 27
 
 int which_mode;
 
@@ -16,34 +18,35 @@ extern WINDOW *error_win;
 
 /* FUNCTIONS */
 void init_game();
-int start();
-void print_options(char *prompt, char *highlighted[], char *not_highlighted[], int choice_size, int which);
+void initial_msg();
+
+int choose_mode();
+int playing_order();
+
+int navigate(int ch, int *which_pr);
+
+void print_options(char *prompt, char *highlighted[], char *not_highlighted[], int which);
 
 // Start game & take beginning choices
 void init_game()
 {
     // Create windows needed in game
     create_windows();
-    refresh();
 
     // Display static windows
     print_logo();
     print_instructions();
 
-    // Start game & get beginning choices
-    // ...
-    
-    start();
+    initial_msg();
+
+    // Prompt user for mode
+    which_mode = choose_mode();
 }
 
-// Prompt user to start game or display game guide
-// Returns 1: start, 0: guide
-int start()
+// Print initial message to start game
+void initial_msg()
 {
     char *start_msg = "PRESS ANY KEY TO START";
-    char *prompt = "Choose a playing mode";
-    char *modes[] =             {"|       TWO PLAYERS       |", "|   PLAY vs THE MACHINE   |"};
-    char *modes_highlighted[] = {"/       TWO PLAYERS       /", "/   PLAY vs THE MACHINE   /"};
 
     // Get screen size & printing position
     int rows, cols, x, y;
@@ -59,66 +62,34 @@ int start()
     wrefresh(main_win);
     getch();
     wclear(main_win);
+}
+
+// Prompt user to start game or display game guide
+// Returns 1: start, 0: guide
+int choose_mode()
+{
+    char *prompt = "Choose a playing mode";
+    char *modes[] =             {"|       TWO PLAYERS       |", "|   PLAY vs THE MACHINE   |"};
+    char *modes_highlighted[] = {"/       TWO PLAYERS       /", "/   PLAY vs THE MACHINE   /"};
 
     // Print initial state of choices
-    int choice_size = 27;
-
-    print_options(prompt, modes_highlighted, modes, choice_size, 0);
+    print_options(prompt, modes_highlighted, modes, 0);
     wrefresh(main_win);
 
     // Take user choice
     int ch, which;
     which = 0;
-    while ((ch = getch()) != 113)
+    while ((ch = getch()) != 'q')
     {
-        // Clear main & error windows & reprint borders
-        wclear(main_win);
-        wclear(error_win);
-        wrefresh(error_win);
-
-        // Highlight choice
-        switch(ch)
+        // Check if user made a choice
+        if (navigate(ch, &which))
         {
-            // Move left
-            case KEY_LEFT:
-            case 104:
-                which--;
-                // Check_borders
-                if (which < 1 || which > 2)
-                {
-                    print_error(0);
-                }
-                which = 1;
-                break;
-            // Move right
-            case KEY_RIGHT:
-            case 108:
-                which++;
-                // Check borders
-                if (which > 2 || which < 1)
-                {
-                    print_error(0);
-                }
-                which = 2;
-                break;
-            // Enter key -> made a choice
-            case 10:
-                if (!which)
-                {
-                    print_error(1);
-                }
-                else
-                {
-                    return which;
-                }
-            // Invalid key
-            default:
-                print_error(2);
+            return which - 1;
         }
 
         // Print choices with highlighting
         box(main_win, 0, 0);
-        print_options(prompt, modes_highlighted, modes, choice_size, which);
+        print_options(prompt, modes_highlighted, modes, which);
 
         // Re-draw error window
         redrawwin(error_win);
@@ -126,9 +97,99 @@ int start()
     }
 }
 
+// Prompt user for playing order -> used in computer mode
+int playing_order()
+{
+    char *prompt = "Choose playing order";
+    char *orders[] =             {"|       PLAY  FIRST       |", "|       PLAY SECOND       |"};
+    char *orders_highlighted[] = {"/       PLAY  FIRST       /", "/       PLAY SECOND       /"};
+
+    // Print initial state of choices
+    print_options(prompt, orders_highlighted, orders, 0);
+    wrefresh(main_win);
+
+    // Take user choice
+    int ch, which;
+    which = 0;
+    while ((ch = getch()) != 'q')
+    {
+        // Check if user made a choice
+        if (navigate(ch, &which))
+        {
+            return which - 1;
+        }
+
+        // Print choices with highlighting
+        box(main_win, 0, 0);
+        print_options(prompt, orders_highlighted, orders, which);
+
+        // Re-draw error window
+        redrawwin(error_win);
+        wrefresh(error_win);
+    }
+}
+
+// Navigate between choices & highlight choice
+// Returns 1 if user made a choice, 0 otherwise
+int navigate(int ch, int *which_pr)
+{
+    // Set which variable
+    int which = *which_pr;
+
+    // Clear main & error windows
+    wclear(main_win);
+    wclear(error_win);
+    wrefresh(error_win);
+
+    // Highlight choice
+    switch(ch)
+    {
+        // Move left
+        case KEY_LEFT:
+        case 'h':
+            which--;
+            // Check_borders
+            if (which < 1 || which > 2)
+            {
+                print_error(0);
+            }
+            which = 1;
+            break;
+        // Move right
+        case KEY_RIGHT:
+        case 'l':
+            which++;
+            // Check borders
+            if (which > 2 || which < 1)
+            {
+                print_error(0);
+            }
+            which = 2;
+            break;
+        // Enter key -> made a choice
+        case 10:
+            if (!which)
+            {
+                print_error(1);
+            }
+            else
+            {
+                *which_pr = which;
+                return 1;
+            }
+        // Invalid key
+        default:
+            print_error(2);
+    }
+
+    // Re-set pointer
+    *which_pr = which;
+    return 0;
+}
+
 // Print choice options -> highlight position
 // If which : 1 -> highlight 1st, 2 -> highlight 2nd, 0 -> no highlighting
-void print_options(char *prompt, char *highlighted[], char *not_highlighted[], int choice_size, int which)
+void print_options(char *prompt, char *highlighted[], char *not_highlighted[], int which)
 {
     // Get window size &  printing position
     int rows, cols, y, x;
@@ -143,7 +204,7 @@ void print_options(char *prompt, char *highlighted[], char *not_highlighted[], i
 
     // Print choices
     y = rows / 2;
-    x = (cols - choice_size * NO_OPTIONS) / 2;
+    x = (cols - CHOICE_BUTTON_SIZE * NO_OPTIONS) / 2;
 
     // No highlighting
     if (!which)
@@ -159,7 +220,7 @@ void print_options(char *prompt, char *highlighted[], char *not_highlighted[], i
         wattroff(main_win, A_BOLD | A_REVERSE);
 
         // 2nd choice
-        mvwprintw(main_win, y, x + choice_size, "%s", not_highlighted[1]);
+        mvwprintw(main_win, y, x + CHOICE_BUTTON_SIZE, "%s", not_highlighted[1]);
     }
     // Highlight 2nd choice
     else if (which == 2)
@@ -169,7 +230,7 @@ void print_options(char *prompt, char *highlighted[], char *not_highlighted[], i
 
         // 2nd choice
         wattron(main_win, A_BOLD | A_REVERSE);
-        mvwprintw(main_win, y, x + choice_size, "%s", highlighted[1]);
+        mvwprintw(main_win, y, x + CHOICE_BUTTON_SIZE, "%s", highlighted[1]);
         wattroff(main_win, A_BOLD | A_REVERSE);
     }
 
