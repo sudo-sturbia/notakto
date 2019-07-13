@@ -21,6 +21,8 @@ void clear_windows();
 void destroy_windows();
 
 void print_logo();
+void print_instructions();
+void print_error(int error_num);
 
 // Create windows used in game
 void create_windows()
@@ -155,7 +157,7 @@ void print_logo()
                                               0, 0, 1, 1, 2, 1, 1, 2, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 0}
                                              };
 
-    // Screen size
+    // Logo window size
     int win_rows, win_cols;
     win_rows = 9;
     win_cols = 65;
@@ -194,4 +196,56 @@ void print_logo()
     mvwprintw(logo_win, y, x, "%s", author);
 
     wrefresh(logo_win);
+}
+
+// Print game instructions 
+void print_instructions()
+{
+    char *instructions[] = {" INSTRUCTIONS:",
+                            "- To navigate use: ",
+                            "              k",
+                            "           h     l",
+                            "              j",
+                            "- To use menu press ESC",
+                            "- To quit press q"};
+
+    // Get window size & printing position
+    int win_rows, win_cols, x;
+    getmaxyx(instructions_win, win_rows, win_cols);
+
+    x = win_cols / 8;
+    x = (x > 0) ? x : 1;           // x must be higher than 0
+
+    // Print borders
+    box(instructions_win, 0, 0);
+
+    // Print window tag
+    mvwprintw(instructions_win, 0, 1, "%s", instructions[0]);
+
+    // Print instructions
+    for (int i = 1; i <= 6; i++)
+    {
+        mvwprintw(instructions_win, i, x, "%s", instructions[i]);
+    }
+
+    wrefresh(instructions_win);
+}
+
+// Print error messages
+void print_error(int error_num)
+{
+    // Error messages
+    char *error_msgs[] = {"Error: invalid move", "Error: no choice made", "Error: invalid key"};
+
+    // Get window size & printing position
+    int rows, cols, y, x;
+    getmaxyx(error_win, rows, cols);
+
+    x = (cols - strlen(error_msgs[error_num])) / 2;
+    y = 1;
+
+    // Print error message
+    mvwprintw(error_win, y, x, "%s", error_msgs[error_num]);
+
+    wrefresh(error_win);
 }
