@@ -78,9 +78,9 @@ void create_windows()
 
     // Create error window -> inside main window
     height = 3;
-    width = cols;
-    y = rows - 9 - 3;
-    x = 0;
+    width = cols - 2;
+    y = rows - 9 - 4;
+    x = 1;
 
     error_win = newwin(height, width, y, x);
 
@@ -243,6 +243,9 @@ void print_error(int error_num)
 
     x = (cols - strlen(error_msgs[error_num])) / 2;
     y = 1;
+
+    // Clear error window
+    wclear(error_win);
 
     // Print error message
     mvwprintw(error_win, y, x, "%s", error_msgs[error_num]);
