@@ -6,9 +6,11 @@
 #define LOGO_WIDTH 62
 #define LOGO_HEIGHT 5
 
+#define NO_BOARDS 3
+
 /* WINDOWS */
 WINDOW *main_win;
-WINDOW *boards_win[3];
+WINDOW *boards_win[NO_BOARDS];
 WINDOW *logo_win;
 WINDOW *instructions_win;
 WINDOW *menu_win;
@@ -22,7 +24,6 @@ void destroy_windows();
 
 void print_logo();
 void print_instructions();
-void print_error(int error_num);
 
 // Create windows used in game
 void create_windows()
@@ -139,7 +140,7 @@ void destroy_windows()
     delwin(status_win);
 }
 
-/* Printing functions */
+/* Printing functions for static windows */
 void print_logo()
 {
     // Logo & author
@@ -229,26 +230,4 @@ void print_instructions()
     }
 
     wrefresh(instructions_win);
-}
-
-// Print error messages
-void print_error(int error_num)
-{
-    // Error messages
-    char *error_msgs[] = {"Error: invalid move", "Error: no choice made", "Error: invalid key"};
-
-    // Get window size & printing position
-    int rows, cols, y, x;
-    getmaxyx(error_win, rows, cols);
-
-    x = (cols - strlen(error_msgs[error_num])) / 2;
-    y = 1;
-
-    // Clear error window
-    wclear(error_win);
-
-    // Print error message
-    mvwprintw(error_win, y, x, "%s", error_msgs[error_num]);
-
-    wrefresh(error_win);
 }

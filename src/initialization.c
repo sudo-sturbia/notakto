@@ -2,6 +2,7 @@
 #include <ncurses.h>
 #include <string.h>
 #include "game_windows.h"
+#include "main_scr.h"
 
 /* DEFINITIONS */
 #define HUMAN_MODE 0
@@ -41,6 +42,8 @@ void init_game()
 
     // Prompt user for mode
     which_mode = choose_mode();
+
+    game_mode();
 }
 
 // Print initial message to start game
