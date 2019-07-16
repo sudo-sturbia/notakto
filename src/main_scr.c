@@ -1,6 +1,7 @@
 /* Main game screen */
 #include <ncurses.h>
 #include <string.h>
+#include "initialization.h"
 
 /* DEFINITIONS */
 #define HUMAN_MODE 0
@@ -16,8 +17,9 @@ extern int which_mode;
 extern WINDOW *main_win;
 extern WINDOW *boards_win[NO_BOARDS];
 extern WINDOW *menu_win;
-extern WINDOW *status_win;
 extern WINDOW *error_win;
+extern WINDOW *status_win;
+extern WINDOW *endgame_win;
 
 /* FUNCTIONS */
 void game_mode();
@@ -30,6 +32,8 @@ void fill_boards();
 void print_boards(int x, int y);
 void print_board(int board[3][3], WINDOW *board_win);
 void print_menu(int which);
+void print_status(int turn);
+int print_endgame(int who_won);
 void print_error(int error_num);
 
 // Start choosen mode
@@ -221,6 +225,132 @@ void print_menu(int which)
     }
 
     wrefresh(menu_win);
+}
+
+// Print turn status
+// If turn = 1 -> computer or player 1, turn = -1 -> otherwise
+void print_status(int turn)
+{
+    char *tag = " STATUS:";
+    char *status[] = {"Player 1 to play",
+                      "Player 2 to play",
+                      "Thinking ...",
+                      "Your turn"};
+
+    // Clear status window & print borders
+    wclear(status_win);
+    box(status_win, 0, 0);
+
+    // Print tag
+    mvwprintw(status_win, 0, 1, "%s", tag);
+
+    // Printing position
+    int x, y;
+    x = 4;
+    y = 1;
+
+
+    // Print turn status
+    if (which_mode == COMPU_MODE)
+    {
+        // Computer turn
+        if (turn == 1)
+        {
+            mvwprintw(status_win, y, x, "%s", status[2]);
+        }
+        // User won
+        else if (turn == -1)
+        {
+            mvwprintw(status_win, y, x, "%s", status[3]);
+        }
+    }
+    else if (which_mode == HUMAN_MODE)
+    {
+        // Player 1 won
+        if (turn == 1)
+        {
+            mvwprintw(status_win, y, x, "%s", status[0]);
+        }
+        // User won
+        else if (turn == -1)
+        {
+            mvwprintw(status_win, y, x, "%s", status[1]);
+        }
+    }
+
+    wrefresh(status_win);
+}
+
+// Print message & prompt after game ending
+// If who_won = 1 -> computer or player 1, who_won = -1 -> otherwise
+int print_endgame(int who_won)
+{
+    char *prompt     =  "Play again?";
+    char *win_msg[]  = {"Congratulations",
+                        "PLAYER ?",
+                        "You won"};
+    char *lose_msg[] = {"You lost",
+                        "Better luck next time"};
+
+    char *choices[] =             {"|        New  game        |", "|           Quit          |"};
+    char *choices_highlighted[] = {"/        New  game        /", "/           Quit          /"};
+
+    // Get window size & printing position
+    int rows, cols, x1, x2;
+    getmaxyx(endgame_win, rows, cols);
+
+    // Print game ending message
+    if (which_mode == COMPU_MODE)
+    {
+        // User won
+        if (who_won == -1)
+        {
+            x1 = (cols - strlen(win_msg[0])) / 2;
+            x2 = (cols - strlen(win_msg[2])) / 2;
+
+            mvwprintw(endgame_win, 0, x1, "%s", win_msg[0]);
+            mvwprintw(endgame_win, 1, x2, "%s", win_msg[2]);
+        }
+        // Computer won
+        else if (who_won == 1)
+        {
+            x1 = (cols - strlen(lose_msg[0])) / 2;
+            x2 = (cols - strlen(lose_msg[1])) / 2;
+
+            mvwprintw(endgame_win, 0, x1, "%s", lose_msg[0]);
+            mvwprintw(endgame_win, 1, x2, "%s", lose_msg[1]);
+        }
+    }
+    else if (which_mode == HUMAN_MODE)
+    {
+        // Find winner 
+        char *winner = (who_won == 1) ? "PLAYER 1" : "PLAYER 2";
+
+        x1 = (cols - strlen(win_msg[0])) / 2;
+        x2 = (cols - strlen(win_msg[1])) / 2;
+
+        mvwprintw(endgame_win, 0, x1, "%s", win_msg[0]);
+        mvwprintw(endgame_win, 1, x2, "%s", winner);
+    }
+
+    // Print initial state of options
+    print_options(endgame_win, prompt, choices_highlighted, choices, 0);
+    wrefresh(endgame_win);
+
+    // Take user choice
+    int ch, which;
+    which = 0;
+    while ((ch = getch()) != 'q')
+    {
+        // Check if user made a choice
+        if (navigate(ch, &which))
+        {
+            return which - 1;
+        }
+
+        // Print choices with highlighting
+        print_options(endgame_win, prompt, choices_highlighted, choices, which);
+    }
 }
 
 // Print error messages

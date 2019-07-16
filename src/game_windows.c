@@ -16,6 +16,7 @@ WINDOW *instructions_win;
 WINDOW *menu_win;
 WINDOW *error_win;
 WINDOW *status_win;
+WINDOW *endgame_win;
 
 /* FUNCTIONS */
 void create_windows();
@@ -86,12 +87,20 @@ void create_windows()
     error_win = newwin(height, width, y, x);
 
     // Create status (turn) window
-    height = 4;
+    height = 3;
     width = 24;
-    y = 1;
-    x = 1;
+    y = rows - 9 - 4;
+    x = 2;
 
     status_win = newwin(height, width, y, x);
+
+    // Create game ending window
+    height = 10;
+    width = 60;
+    y = (rows - height - 9) / 2;
+    x = (cols - width) / 2;
+
+    endgame_win = newwin(height, width, y, x);
 }
 
 // Clear all windows & remove borders

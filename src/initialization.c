@@ -26,7 +26,7 @@ int playing_order();
 
 int navigate(int ch, int *which_pr);
 
-void print_options(char *prompt, char *highlighted[], char *not_highlighted[], int which);
+void print_options(WINDOW *which_win, char *prompt, char *highlighted[], char *not_highlighted[], int which);
 
 // Start game & take beginning choices
 void init_game()
@@ -76,7 +76,8 @@ int choose_mode()
     char *modes_highlighted[] = {"/       TWO PLAYERS       /", "/   PLAY vs THE MACHINE   /"};
 
     // Print initial state of choices
-    print_options(prompt, modes_highlighted, modes, 0);
+    box(main_win, 0, 0);
+    print_options(main_win, prompt, modes_highlighted, modes, 0);
     wrefresh(main_win);
 
     // Take user choice
@@ -92,7 +93,7 @@ int choose_mode()
 
         // Print choices with highlighting
         box(main_win, 0, 0);
-        print_options(prompt, modes_highlighted, modes, which);
+        print_options(main_win, prompt, modes_highlighted, modes, which);
 
         // Re-draw error window
         redrawwin(error_win);
@@ -108,7 +109,8 @@ int playing_order()
     char *orders_highlighted[] = {"/       PLAY  FIRST       /", "/       PLAY SECOND       /"};
 
     // Print initial state of choices
-    print_options(prompt, orders_highlighted, orders, 0);
+    box(main_win, 0, 0);
+    print_options(main_win, prompt, orders_highlighted, orders, 0);
     wrefresh(main_win);
 
     // Take user choice
@@ -124,7 +126,7 @@ int playing_order()
 
         // Print choices with highlighting
         box(main_win, 0, 0);
-        print_options(prompt, orders_highlighted, orders, which);
+        print_options(main_win, prompt, orders_highlighted, orders, which);
 
         // Re-draw error window
         redrawwin(error_win);
@@ -192,18 +194,17 @@ int navigate(int ch, int *which_pr)
 
 // Print choice options -> highlight position
 // If which : 1 -> highlight 1st, 2 -> highlight 2nd, 0 -> no highlighting
-void print_options(char *prompt, char *highlighted[], char *not_highlighted[], int which)
+void print_options(WINDOW *which_win, char *prompt, char *highlighted[], char *not_highlighted[], int which)
 {
     // Get window size &  printing position
     int rows, cols, y, x;
-    getmaxyx(main_win, rows, cols);
+    getmaxyx(which_win, rows, cols);
 
     // Print prompt
     x = (cols - strlen(prompt)) / 2;
     y = (rows - 3) / 2;
 
-    box(main_win, 0, 0);
-    mvwprintw(main_win, y, x, "%s", prompt);
+    mvwprintw(which_win, y, x, "%s", prompt);
 
     // Print choices
     y = rows / 2;
@@ -212,30 +213,30 @@ void print_options(char *prompt, char *highlighted[], char *not_highlighted[], i
     // No highlighting
     if (!which)
     {
-        mvwprintw(main_win, y, x, "%s%s", not_highlighted[0], not_highlighted[1]);
+        mvwprintw(which_win, y, x, "%s%s", not_highlighted[0], not_highlighted[1]);
     }
     // Highlight 1st choice
     else if (which == 1)
     {
         // 1st choice
-        wattron(main_win, A_BOLD | A_REVERSE);
-        mvwprintw(main_win, y, x, "%s", highlighted[0]);
-        wattroff(main_win, A_BOLD | A_REVERSE);
+        wattron(which_win, A_BOLD | A_REVERSE);
+        mvwprintw(which_win, y, x, "%s", highlighted[0]);
+        wattroff(which_win, A_BOLD | A_REVERSE);
 
         // 2nd choice
-        mvwprintw(main_win, y, x + CHOICE_BUTTON_SIZE, "%s", not_highlighted[1]);
+        mvwprintw(which_win, y, x + CHOICE_BUTTON_SIZE, "%s", not_highlighted[1]);
     }
     // Highlight 2nd choice
     else if (which == 2)
     {
         // 1st choice
-        mvwprintw(main_win, y, x, "%s", not_highlighted[0]);
+        mvwprintw(which_win, y, x, "%s", not_highlighted[0]);
 
         // 2nd choice
-        wattron(main_win, A_BOLD | A_REVERSE);
-        mvwprintw(main_win, y, x + CHOICE_BUTTON_SIZE, "%s", highlighted[1]);
-        wattroff(main_win, A_BOLD | A_REVERSE);
+        wattron(which_win, A_BOLD | A_REVERSE);
+        mvwprintw(which_win, y, x + CHOICE_BUTTON_SIZE, "%s", highlighted[1]);
+        wattroff(which_win, A_BOLD | A_REVERSE);
     }
 
-    wrefresh(main_win);
+    wrefresh(which_win);
 }

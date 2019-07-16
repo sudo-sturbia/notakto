@@ -10,6 +10,6 @@ int playing_order();
 
 int navigate(int ch, int *which_pr);
 
-void print_options(char *prompt, char *highlighted[], char *not_highlighted[], int which);
+void print_options(WINDOW *which_win, char *prompt, char *highlighted[], char *not_highlighted[], int which);
 
 #endif
