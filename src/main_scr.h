@@ -7,6 +7,10 @@ void game_mode();
 void human_mode();
 void compu_mode();
 
+int play_two_user();
+
+int navigate_boards(int ch, int *x_pr, int *y_pr);
+
 void fill_boards();
 
 void print_boards(int x, int y);

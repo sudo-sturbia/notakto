@@ -154,7 +154,7 @@ void print_logo()
 {
     // Logo & author
     // Logo is represented using an integer array where -> 0: ' ', 1: block, 2: |, 4: -
-    char *author = "by: sudo-sturbia";
+    char *author = "@sudo-sturbia";
     int logo_arr[LOGO_HEIGHT][LOGO_WIDTH] = {{1, 1, 1, 2, 0, 0, 0, 1, 1, 2, 0, 1, 1, 1, 1, 1, 1, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 1, 1,
                                               1, 1, 1, 2, 0, 1, 1, 2, 0, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 1, 1, 1, 1, 1, 1, 2, 0},
                                              {1, 1, 1, 1, 2, 0, 0, 1, 1, 2, 1, 1, 2, 4, 4, 4, 1, 1, 2, 0, 4, 4, 1, 1, 2, 4, 4, 0, 1, 1, 2,
@@ -212,10 +212,11 @@ void print_logo()
 void print_instructions()
 {
     char *instructions[] = {" INSTRUCTIONS:",
-                            "- To navigate use: ",
-                            "         k            ^",
-                            "      h     l  OR  <     >",
-                            "         j            v",
+                            "- To navigate use:  ^",
+                            "                    k",
+                            "               < h     l >",
+                            "                    j",
+                            "                    v",
                             "- To use menu press ESC",
                             "- To quit press q"};
 
@@ -233,7 +234,7 @@ void print_instructions()
     mvwprintw(instructions_win, 0, 1, "%s", instructions[0]);
 
     // Print instructions
-    for (int i = 1; i <= 6; i++)
+    for (int i = 1; i <= 7; i++)
     {
         mvwprintw(instructions_win, i, x, "%s", instructions[i]);
     }

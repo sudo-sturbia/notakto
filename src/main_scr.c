@@ -12,6 +12,11 @@
 // Game boards -> if element = 0 -> empty space, 1 -> X
 int boards[NO_BOARDS][3][3];
 
+// Number of games played by user + no. of wins & no. of loses
+int no_games;
+int no_wins;
+int no_loses;
+
 extern int which_mode;
 
 extern WINDOW *main_win;
@@ -26,6 +31,10 @@ void game_mode();
 
 void human_mode();
 void compu_mode();
+
+int play_two_user();
+
+int navigate_boards(int ch, int *x_pr, int *y_pr);
 
 void fill_boards();
 
@@ -44,9 +53,6 @@ void game_mode()
     box(main_win, 0, 0);
     wrefresh(main_win);
 
-    // Fill game boards
-    fill_boards();
-
     if (which_mode == HUMAN_MODE)
     {
         human_mode();
@@ -60,13 +66,154 @@ void game_mode()
 // Two players mode
 void human_mode()
 {
-    // ...
+    // Play games until user quits
+    for (;;)
+    {
+        // Increment number of games
+        no_games++;
+
+        // Fill boards with 0
+        fill_boards();
+
+        int who_won;
+
+        // Play game & return winner
+        who_won = play_two_user();
+    }
 }
 
 // Computer mode
 void compu_mode()
 {
     // ...
+}
+
+// Two user game -> return winner
+int play_two_user()
+{
+    // Set turn variable
+    int turn = 1;
+
+    // Display initial state of boards
+    print_boards(-1, -1);
+
+    // Navigate through boards & take user input
+    int x, y, ch;
+    x = y = 0;
+    while ((ch = getch()) != 'q')
+    {
+        // Clear error window & print turn
+        wclear(error_win);
+        wrefresh(error_win);
+
+        print_status(turn);
+
+        // Check if user made a choice
+        if (navigate_boards(ch, &x, &y))
+        {
+            // Validate move
+            // ...
+
+            // Change turn
+        }
+
+        // Print game boards & change turn
+        print_boards(x, y);
+
+        // reprint status & error windows
+        redrawwin(error_win);
+        redrawwin(status_win);
+
+        wrefresh(error_win);
+        wrefresh(status_win);
+    }
+}
+
+// Navigate between boards
+// Returns 1: if user made a choice, 0: otherwise
+int navigate_boards(int ch, int *x_pr, int *y_pr)
+{
+    // Set variables for use inside function
+    int x, y;
+    x = *x_pr;
+    y = *y_pr;
+
+    // Check user choice
+    switch (ch)
+    {
+        // Move up
+        case KEY_UP:
+        case 'k':
+            y--;
+            // Check for borders
+            if (y < 0)
+            {
+               print_error(0);
+               y++;
+            }
+            break;
+        // Move down
+        case KEY_DOWN:
+        case 'j':
+            y++;
+            // Check for borders
+            if (y > 2)
+            {
+                print_error(0);
+                y--;
+            }
+            break;
+        // Move left
+        case KEY_LEFT:
+        case 'h':
+            x--;
+            // Check for borders
+            if (x < 0)
+            {
+                print_error(0);
+                x++;
+            }
+            break;
+        // Move right
+        case KEY_RIGHT:
+        case 'l':
+            x++;
+            // Check for borders
+            if (x > 8)
+            {
+                print_error(0);
+                x--;
+            }
+            break;
+/*      // Use menu
+ *      case 27:
+ */
+        // User made a choice -> enter
+        case 10:
+            // Check if number is valid
+            if (x > 8 || x < 0 || y > 2 || y < 0)
+            {
+                print_error(3);
+            }
+            else
+            {
+                // Re-set pointers
+                *x_pr = x;
+                *y_pr = y;
+                
+                return 1;
+            }
+            break;
+        // Invalid key
+        default:
+            print_error(2);
+    }
+
+    // Re-set pointers
+    *x_pr = x;
+    *y_pr = y;
+
+    return 0;
 }
 
 // Fill boards with 0
@@ -125,11 +272,13 @@ void print_boards(int x, int y)
     highlighted = (boards[which_board][y][x]) ? 'X' : ' ';
 
     // Print highlighted element
-    wattron(boards_win[which_board], A_BOLD | A_REVERSE);
+    wattron(boards_win[which_board], A_BOLD);
 
+    mvwprintw(boards_win[which_board], where_y - 1, where_x, " +++ ");
     mvwprintw(boards_win[which_board], where_y, where_x, "/ %c /", highlighted);
+    mvwprintw(boards_win[which_board], where_y + 1, where_x, " +++ ");
 
-    wattroff(boards_win[which_board], A_BOLD | A_REVERSE);
+    wattroff(boards_win[which_board], A_BOLD);
 
     wrefresh(boards_win[0]);
     wrefresh(boards_win[1]);
@@ -357,7 +506,7 @@ int print_endgame(int who_won)
 void print_error(int error_num)
 {
     // Error messages
-    char *error_msgs[] = {"Error: invalid move", "Error: no choice made", "Error: invalid key"};
+    char *error_msgs[] = {"Error: invalid move", "Error: no choice made", "Error: invalid key", "Error: invalid choice"};
 
     // Get window size & printing position
     int rows, cols, y, x;
