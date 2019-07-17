@@ -2,6 +2,7 @@
 #include <ncurses.h>
 #include <string.h>
 #include "initialization.h"
+#include "moves.h"
 
 /* DEFINITIONS */
 #define HUMAN_MODE 0
@@ -29,8 +30,8 @@ extern WINDOW *endgame_win;
 /* FUNCTIONS */
 void game_mode();
 
-void human_mode();
-void compu_mode();
+int human_mode();
+int compu_mode();
 
 int play_two_user();
 
@@ -48,42 +49,51 @@ void print_error(int error_num);
 // Start choosen mode
 void game_mode()
 {
-    // Clear main window & redraw borders
-    wclear(main_win);
-    box(main_win, 0, 0);
-    wrefresh(main_win);
+    // Play games until user quits
+    for (;;)
+    {
+        // Prompt user for mode
+        which_mode = choose_mode();
+    
+        // Clear main window & redraw borders
+        wclear(main_win);
+        box(main_win, 0, 0);
+        wrefresh(main_win);
 
-    if (which_mode == HUMAN_MODE)
-    {
-        human_mode();
-    }
-    else if (which_mode == COMPU_MODE)
-    {
-        compu_mode();
+        // Fill boards with 0
+        fill_boards();
+   
+        int who_won;
+
+        if (which_mode == HUMAN_MODE)
+        {
+            who_won = human_mode();
+        }
+        else if (which_mode == COMPU_MODE)
+        {
+            who_won = compu_mode();
+        }
+
+        // Print end message & prompt user for another game
+        if (print_endgame(who_won))
+        {
+            break;
+        }
     }
 }
 
 // Two players mode
-void human_mode()
+int human_mode()
 {
-    // Play games until user quits
-    for (;;)
-    {
-        // Increment number of games
-        no_games++;
+    // Increment number of games
+    no_games++;
 
-        // Fill boards with 0
-        fill_boards();
-
-        int who_won;
-
-        // Play game & return winner
-        who_won = play_two_user();
-    }
+    // Play game & return winner
+    return play_two_user();
 }
 
 // Computer mode
-void compu_mode()
+int compu_mode()
 {
     // ...
 }
@@ -447,6 +457,15 @@ int print_endgame(int who_won)
     // Get window size & printing position
     int rows, cols, x1, x2;
     getmaxyx(endgame_win, rows, cols);
+
+    // Clear windows
+    wclear(endgame_win);
+    wclear(main_win);
+
+    box(main_win, 0, 0);
+
+    wrefresh(endgame_win);
+    wrefresh(main_win);
 
     // Print game ending message
     if (which_mode == COMPU_MODE)

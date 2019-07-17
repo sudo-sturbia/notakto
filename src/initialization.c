@@ -40,9 +40,6 @@ void init_game()
 
     initial_msg();
 
-    // Prompt user for mode
-    which_mode = choose_mode();
-
     game_mode();
 }
 

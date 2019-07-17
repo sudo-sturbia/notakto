@@ -4,8 +4,8 @@
 /* FUNCTIONS */
 void game_mode();
 
-void human_mode();
-void compu_mode();
+int human_mode();
+int compu_mode();
 
 int play_two_user();
 
