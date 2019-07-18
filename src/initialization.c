@@ -40,7 +40,7 @@ void init_game()
 
     initial_msg();
 
-    game_mode();
+    play_game();
 }
 
 // Print initial message to start game

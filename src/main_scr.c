@@ -13,6 +13,9 @@
 // Game boards -> if element = 0 -> empty space, 1 -> X
 int boards[NO_BOARDS][3][3];
 
+// Determine if a board is dead -> 1: dead, 0: not
+int dead_boards[NO_BOARDS];
+
 // Number of games played by user + no. of wins & no. of loses
 int no_games;
 int no_wins;
@@ -28,12 +31,10 @@ extern WINDOW *status_win;
 extern WINDOW *endgame_win;
 
 /* FUNCTIONS */
-void game_mode();
-
-int human_mode();
-int compu_mode();
+void play_game();
 
 int play_two_user();
+int play_compu();
 
 int navigate_boards(int ch, int *x_pr, int *y_pr);
 
@@ -46,9 +47,11 @@ void print_status(int turn);
 int print_endgame(int who_won);
 void print_error(int error_num);
 
-// Start choosen mode
-void game_mode()
+// Play games -> both modes 
+void play_game()
 {
+    no_games = no_wins = no_loses = 0;
+
     // Play games until user quits
     for (;;)
     {
@@ -62,17 +65,19 @@ void game_mode()
 
         // Fill boards with 0
         fill_boards();
-   
+
         int who_won;
 
         if (which_mode == HUMAN_MODE)
         {
-            who_won = human_mode();
+            who_won = play_two_user();
         }
         else if (which_mode == COMPU_MODE)
         {
-            who_won = compu_mode();
+            who_won = play_compu();
         }
+
+        no_games++;
 
         // Print end message & prompt user for another game
         if (print_endgame(who_won))
@@ -82,61 +87,68 @@ void game_mode()
     }
 }
 
-// Two players mode
-int human_mode()
-{
-    // Increment number of games
-    no_games++;
-
-    // Play game & return winner
-    return play_two_user();
-}
-
-// Computer mode
-int compu_mode()
-{
-    // ...
-}
-
 // Two user game -> return winner
 int play_two_user()
 {
     // Set turn variable
     int turn = 1;
 
-    // Display initial state of boards
+    // Display initial state of boards & turn
     print_boards(-1, -1);
 
-    // Navigate through boards & take user input
-    int x, y, ch;
-    x = y = 0;
-    while ((ch = getch()) != 'q')
+    while (!is_finished())
     {
-        // Clear error window & print turn
         wclear(error_win);
         wrefresh(error_win);
 
         print_status(turn);
 
-        // Check if user made a choice
-        if (navigate_boards(ch, &x, &y))
+        // Navigate through boards & take user input
+        int x, y, ch;
+        x = y = 0;
+        while ((ch = getch()) != 'q')
         {
-            // Validate move
-            // ...
+            // Clear error window 
+            wclear(error_win);
+            wrefresh(error_win);
 
-            // Change turn
+            redrawwin(status_win);
+            wrefresh(status_win);
+
+            // Check if user made a choice
+            if (navigate_boards(ch, &x, &y))
+            {
+                // Validate move
+                if (is_valid(x, y))
+                {
+                    // Play move 
+                    play_move(x, y);
+
+                    goto next_move;
+                }
+                else
+                {
+                    print_error(0);
+                }
+            }
+
+            // Print game boards
+            print_boards(x, y);
         }
 
-        // Print game boards & change turn
-        print_boards(x, y);
-
-        // reprint status & error windows
-        redrawwin(error_win);
-        redrawwin(status_win);
-
-        wrefresh(error_win);
-        wrefresh(status_win);
+    next_move:
+        // Check if user quit game
+        // ...
+        
+        print_boards(-1 , -1);
+        turn *= -1;
     }
+}
+
+// Game against engine
+int play_compu()
+{
+    // ...
 }
 
 // Navigate between boards
@@ -238,6 +250,8 @@ void fill_boards()
                 boards[i][j][k] = 0;
             }
         }
+
+        dead_boards[i] = 0;
     }
 }
 
@@ -417,7 +431,7 @@ void print_status(int turn)
         {
             mvwprintw(status_win, y, x, "%s", status[2]);
         }
-        // User won
+        // User turn 
         else if (turn == -1)
         {
             mvwprintw(status_win, y, x, "%s", status[3]);
@@ -425,12 +439,12 @@ void print_status(int turn)
     }
     else if (which_mode == HUMAN_MODE)
     {
-        // Player 1 won
+        // Player 1 turn 
         if (turn == 1)
         {
             mvwprintw(status_win, y, x, "%s", status[0]);
         }
-        // User won
+        // User turn 
         else if (turn == -1)
         {
             mvwprintw(status_win, y, x, "%s", status[1]);
@@ -471,7 +485,7 @@ int print_endgame(int who_won)
     if (which_mode == COMPU_MODE)
     {
         // User won
-        if (who_won == -1)
+        if (who_won == 1)
         {
             x1 = (cols - strlen(win_msg[0])) / 2;
             x2 = (cols - strlen(win_msg[2])) / 2;
@@ -480,7 +494,7 @@ int print_endgame(int who_won)
             mvwprintw(endgame_win, 1, x2, "%s", win_msg[2]);
         }
         // Computer won
-        else if (who_won == 1)
+        else if (who_won == -1)
         {
             x1 = (cols - strlen(lose_msg[0])) / 2;
             x2 = (cols - strlen(lose_msg[1])) / 2;
@@ -492,7 +506,7 @@ int print_endgame(int who_won)
     else if (which_mode == HUMAN_MODE)
     {
         // Find winner 
-        char *winner = (who_won == 1) ? "PLAYER 1" : "PLAYER 2";
+        char *winner = (who_won == -1) ? "PLAYER 1" : "PLAYER 2";
 
         x1 = (cols - strlen(win_msg[0])) / 2;
         x2 = (cols - strlen(win_msg[1])) / 2;

@@ -80,9 +80,9 @@ void create_windows()
 
     // Create error window -> inside main window
     height = 3;
-    width = cols - 2;
+    width = cols / 2;
     y = rows - 9 - 4;
-    x = 1;
+    x = cols / 4;
 
     error_win = newwin(height, width, y, x);
 

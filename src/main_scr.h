@@ -2,12 +2,10 @@
 #define MAIN_SCR_H
 
 /* FUNCTIONS */
-void game_mode();
-
-int human_mode();
-int compu_mode();
+void play_game();
 
 int play_two_user();
+int play_compu();
 
 int navigate_boards(int ch, int *x_pr, int *y_pr);
 
