@@ -149,23 +149,11 @@ int navigate(int ch, int *which_pr)
         // Move left
         case KEY_LEFT:
         case 'h':
-            which--;
-            // Check_borders
-            if (which < 1 || which > 2)
-            {
-                print_error(0);
-            }
             which = 1;
             break;
         // Move right
         case KEY_RIGHT:
         case 'l':
-            which++;
-            // Check borders
-            if (which > 2 || which < 1)
-            {
-                print_error(0);
-            }
             which = 2;
             break;
         // Enter key -> made a choice

@@ -8,6 +8,7 @@ int play_two_user();
 int play_compu();
 
 int navigate_boards(int ch, int *x_pr, int *y_pr);
+int side_menu(int which_win);
 
 void fill_boards();
 

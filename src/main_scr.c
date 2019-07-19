@@ -8,8 +8,8 @@
 #define HUMAN_MODE 0
 #define COMPU_MODE 1
 
-#define BOARDS_WIN 1
-#define MENU_WIN   0
+#define BOARDS_WIN 0 
+#define MENU_WIN   1 
 
 #define NO_BOARDS 3
 
@@ -41,6 +41,7 @@ int play_two_user();
 int play_compu();
 
 int navigate_boards(int ch, int *x_pr, int *y_pr);
+int side_menu(int which_win);
 
 void fill_boards();
 
@@ -57,11 +58,11 @@ void play_game()
 {
     no_games = no_wins = no_loses = 0;
 
-    print_menu(0);
-    print_side_menu(1);
+/*    print_menu(0);
+    print_side_menu(BOARDS_WIN);
     getch();
-
-/*    // Play games until user quits
+*/
+    // Play games until user quits
     for (;;)
     {
         // Prompt user for mode
@@ -94,7 +95,7 @@ void play_game()
             break;
         }
     }
-*/}
+}
 
 // Two user game -> return winner
 int play_two_user()
@@ -102,8 +103,9 @@ int play_two_user()
     // Set turn variable
     int turn = 1;
 
-    // Display initial state of boards & turn
+    // Display initial state of windows
     print_boards(-1, -1);
+    print_side_menu(BOARDS_WIN);
 
     while (!is_finished())
     {
@@ -182,7 +184,7 @@ int navigate_boards(int ch, int *x_pr, int *y_pr)
             // Check for borders
             if (y < 0)
             {
-               print_error(0);
+               print_error(4);
                y++;
             }
             break;
@@ -193,7 +195,7 @@ int navigate_boards(int ch, int *x_pr, int *y_pr)
             // Check for borders
             if (y > 2)
             {
-                print_error(0);
+                print_error(4);
                 y--;
             }
             break;
@@ -204,7 +206,7 @@ int navigate_boards(int ch, int *x_pr, int *y_pr)
             // Check for borders
             if (x < 0)
             {
-                print_error(0);
+                print_error(4);
                 x++;
             }
             break;
@@ -215,13 +217,17 @@ int navigate_boards(int ch, int *x_pr, int *y_pr)
             // Check for borders
             if (x > 8)
             {
-                print_error(0);
+                print_error(4);
                 x--;
             }
             break;
-/*      // Use menu
- *      case 27:
- */
+        // Use side menu
+        case 27:
+            if (side_menu(BOARDS_WIN) == MENU_WIN)
+            {
+                // ...
+            }
+            break;
         // User made a choice -> enter
         case 10:
             // Check if number is valid
@@ -248,6 +254,52 @@ int navigate_boards(int ch, int *x_pr, int *y_pr)
     *y_pr = y;
 
     return 0;
+}
+
+// Use side menu -> choose shown window
+int side_menu(int which_win)
+{
+    int navigate = which_win;
+
+    // Navigate through choices & take user choice
+    int ch;
+    while ((ch = getch()) != 'q')
+    {
+        wclear(side_menu_win);
+        wclear(error_win);
+        wrefresh(error_win);
+
+        switch (ch)
+        {
+            case KEY_UP:
+            case 'k':
+                navigate--;
+                // Check borders
+                if (navigate < 0)
+                {
+                    navigate++;
+                }
+                break;
+            case KEY_DOWN:
+            case 'j':
+                navigate++;
+                // Check borders
+                if (navigate > 1)
+                {
+                    navigate--;
+                }
+                break;
+            // Enter key -> user made a choice
+            case 10:
+                return which_win;
+            // Invalid key
+            default:
+                print_error(2);
+        }
+        
+        // Print choices
+        print_side_menu(navigate);
+    }
 }
 
 // Fill boards with 0
@@ -422,12 +474,12 @@ void print_menu(int which)
                     " - Save game",
                     " - Quit"};
 
-    char *highlighted_menu[] = {"     -> Restart          ",
-                                "     -> Continue         ",
-                                "     -> Undo last move   ",
-                                "     -> Redo last move   ",
-                                "     -> Save game        ",
-                                "     -> Quit             "};
+    char *highlighted_menu[] = {"     -> Restart                         ",
+                                "     -> Continue                        ",
+                                "     -> Undo last move                  ",
+                                "     -> Redo last move                  ",
+                                "     -> Save game                       ",
+                                "     -> Quit                            "};
     
     // Print borders & tag
     box(menu_win, 0, 0);
@@ -591,7 +643,7 @@ int print_endgame(int who_won)
 void print_error(int error_num)
 {
     // Error messages
-    char *error_msgs[] = {"Error: invalid move", "Error: no choice made", "Error: invalid key", "Error: invalid choice"};
+    char *error_msgs[] = {"Error: invalid move", "Error: no choice made", "Error: invalid key", "Error: invalid choice", "Error: border"};
 
     // Get window size & printing position
     int rows, cols, y, x;
