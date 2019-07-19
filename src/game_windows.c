@@ -89,9 +89,9 @@ void create_windows()
 
     // Create error window -> inside main window
     height = 3;
-    width = cols / 2;
+    width = 25;
     y = rows - 9 - 4;
-    x = cols / 4;
+    x = (cols - 25) / 2;
 
     error_win = newwin(height, width, y, x);
 
@@ -222,12 +222,12 @@ void print_instructions()
 {
     char *instructions[] = {" INSTRUCTIONS:",
                             "- To navigate:",
-                            "                       ^",
-                            "               < h  j  k  l >",
-                            "                    v",
+                            "                         ^",
+                            "                 < h  j  k  l >",
+                            "                      v",
                             "\n",
-                            "- For side menu: ESC",
-                            "- To quit:       q"};
+                            "- For side menu:  s",
+                            "- To quit:        q"};
 
     // Get window size & printing position
     int win_rows, win_cols, x;

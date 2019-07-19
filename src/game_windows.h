@@ -1,5 +1,5 @@
-#ifndef GAME_WINDOWS_H
-#define GAME_WINDOWS_H
+#ifndef GAME_WINDOWS_H_INCLUDED
+#define GAME_WINDOWS_H_INCLUDED
 
 /* FUNCTIONS */
 void create_windows();

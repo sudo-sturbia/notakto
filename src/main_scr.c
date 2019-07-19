@@ -100,7 +100,7 @@ void play_game()
 // Two user game -> return winner
 int play_two_user()
 {
-    // Set turn variable
+    // Set turn 
     int turn = 1;
 
     // Display initial state of windows
@@ -162,6 +162,26 @@ int play_two_user()
 // Game against engine
 int play_compu()
 {
+    // Set turn variable
+    int turn = 1;
+
+    // Choose playing order
+    if (playing_order())
+    {
+        // Engine plays 1st move
+        // ...
+    }
+
+    // Display initial state of windows
+    wclear(main_win);
+    box(main_win, 0, 0);
+    wrefresh(main_win);
+
+    print_boards(-1, -1);
+    print_side_menu(BOARDS_WIN);
+
+    getch();
+    return 0;
     // ...
 }
 
@@ -222,7 +242,7 @@ int navigate_boards(int ch, int *x_pr, int *y_pr)
             }
             break;
         // Use side menu
-        case 27:
+        case 's':
             if (side_menu(BOARDS_WIN) == MENU_WIN)
             {
                 // ...
@@ -643,7 +663,8 @@ int print_endgame(int who_won)
 void print_error(int error_num)
 {
     // Error messages
-    char *error_msgs[] = {"Error: invalid move", "Error: no choice made", "Error: invalid key", "Error: invalid choice", "Error: border"};
+    char *tag = "Error: ";
+    char *error_msgs[] = {"invalid move", "no choice made", "invalid key", "invalid choice", "border"};
 
     // Get window size & printing position
     int rows, cols, y, x;
@@ -656,7 +677,7 @@ void print_error(int error_num)
     wclear(error_win);
 
     // Print error message
-    mvwprintw(error_win, y, x, "%s", error_msgs[error_num]);
+    mvwprintw(error_win, y, x, "%s%s", tag, error_msgs[error_num]);
 
     wrefresh(error_win);
 }

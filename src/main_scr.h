@@ -1,5 +1,5 @@
-#ifndef MAIN_SCR_H
-#define MAIN_SCR_H
+#ifndef MAIN_SCR_H_INCLUDED
+#define MAIN_SCR_H_INCLUDED
 
 /* FUNCTIONS */
 void play_game();
