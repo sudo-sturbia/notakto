@@ -14,6 +14,7 @@ WINDOW *boards_win[NO_BOARDS];
 WINDOW *logo_win;
 WINDOW *instructions_win;
 WINDOW *menu_win;
+WINDOW *side_menu_win;
 WINDOW *error_win;
 WINDOW *status_win;
 WINDOW *endgame_win;
@@ -77,6 +78,14 @@ void create_windows()
     x = (cols - width) / 2;
 
     menu_win = newwin(height, width, y, x);
+
+    // Create side menu window 
+    height = 6;
+    width = 20;
+    y = 2;
+    x = 3;
+
+    side_menu_win = newwin(height, width, y, x);
 
     // Create error window -> inside main window
     height = 3;
@@ -212,13 +221,13 @@ void print_logo()
 void print_instructions()
 {
     char *instructions[] = {" INSTRUCTIONS:",
-                            "- To navigate use:  ^",
-                            "                    k",
-                            "               < h     l >",
-                            "                    j",
+                            "- To navigate:",
+                            "                       ^",
+                            "               < h  j  k  l >",
                             "                    v",
-                            "- To use menu press ESC",
-                            "- To quit press q"};
+                            "\n",
+                            "- For side menu: ESC",
+                            "- To quit:       q"};
 
     // Get window size & printing position
     int win_rows, win_cols, x;

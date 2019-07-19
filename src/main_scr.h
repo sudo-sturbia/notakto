@@ -11,6 +11,7 @@ int navigate_boards(int ch, int *x_pr, int *y_pr);
 
 void fill_boards();
 
+void print_side_menu(int which_win);
 void print_boards(int x, int y);
 void print_board(int board[3][3], WINDOW *board_win);
 void print_menu(int which);

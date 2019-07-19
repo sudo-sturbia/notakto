@@ -8,6 +8,9 @@
 #define HUMAN_MODE 0
 #define COMPU_MODE 1
 
+#define BOARDS_WIN 1
+#define MENU_WIN   0
+
 #define NO_BOARDS 3
 
 // Game boards -> if element = 0 -> empty space, 1 -> X
@@ -26,6 +29,7 @@ extern int which_mode;
 extern WINDOW *main_win;
 extern WINDOW *boards_win[NO_BOARDS];
 extern WINDOW *menu_win;
+extern WINDOW *side_menu_win;
 extern WINDOW *error_win;
 extern WINDOW *status_win;
 extern WINDOW *endgame_win;
@@ -40,6 +44,7 @@ int navigate_boards(int ch, int *x_pr, int *y_pr);
 
 void fill_boards();
 
+void print_side_menu(int which_win);
 void print_boards(int x, int y);
 void print_board(int board[3][3], WINDOW *board_win);
 void print_menu(int which);
@@ -52,7 +57,11 @@ void play_game()
 {
     no_games = no_wins = no_loses = 0;
 
-    // Play games until user quits
+    print_menu(0);
+    print_side_menu(1);
+    getch();
+
+/*    // Play games until user quits
     for (;;)
     {
         // Prompt user for mode
@@ -79,13 +88,13 @@ void play_game()
 
         no_games++;
 
-        // Print end message & prompt user for another game
-        if (print_endgame(who_won))
+        // User quit or Game ended 
+        if (!who_won || print_endgame(who_won))
         {
             break;
         }
     }
-}
+*/}
 
 // Two user game -> return winner
 int play_two_user()
@@ -138,7 +147,10 @@ int play_two_user()
 
     next_move:
         // Check if user quit game
-        // ...
+        if (ch == 'q')
+        {
+            return 0;
+        }
         
         print_boards(-1 , -1);
         turn *= -1;
@@ -257,6 +269,46 @@ void fill_boards()
 
 /* Printing functions */
 
+// Print side menu -> indicates which window is being used
+void print_side_menu(int which_win)
+{
+    char *tag = " CURRENT-WINDOW:";
+    char *windows[] = {" - Game",
+                       " - Menu"};
+    char *windows_highlighted[] = {"     -> Game    ",
+                                   "     -> Menu    "};
+
+    // Clear window & print borders
+    wclear(side_menu_win);
+    box(side_menu_win, 0, 0);
+
+    // Get screen size
+    int rows, cols;
+    getmaxyx(side_menu_win, rows, cols);
+
+    // Print tag
+    mvwprintw(side_menu_win, 0, 1, "%s", tag);
+
+    // Print menu
+    for (int i = 0; i < 2; i++)
+    {
+        // Highlighted choice
+        if (i == which_win)
+        {
+            wattron(side_menu_win, A_BOLD | A_REVERSE);
+            mvwprintw(side_menu_win, i + 2, 2, "%s", windows_highlighted[i]);
+            wattroff(side_menu_win, A_BOLD | A_REVERSE);
+        }
+        // Un-highlighted choice
+        else
+        {
+            mvwprintw(side_menu_win, i + 2, 2, "%s", windows[i]);
+        }
+    }
+    
+    wrefresh(side_menu_win);
+}
+
 // Print game boards
 // if 1 -> X, 0 -> empty space
 void print_boards(int x, int y)
@@ -370,12 +422,12 @@ void print_menu(int which)
                     " - Save game",
                     " - Quit"};
 
-    char *highlighted_menu[] = {"\t -> Restart",
-                                "\t -> Continue",
-                                "\t -> Undo last move",
-                                "\t -> Redo last move",
-                                "\t -> Save game",
-                                "\t -> Quit"};
+    char *highlighted_menu[] = {"     -> Restart          ",
+                                "     -> Continue         ",
+                                "     -> Undo last move   ",
+                                "     -> Redo last move   ",
+                                "     -> Save game        ",
+                                "     -> Quit             "};
     
     // Print borders & tag
     box(menu_win, 0, 0);
