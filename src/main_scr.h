@@ -13,4 +13,6 @@ int use_menu();
 
 void fill_boards();
 
+int play_again(int who_won);
+
 #endif

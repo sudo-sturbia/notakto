@@ -40,7 +40,7 @@ void print_boards(int x, int y);
 void print_board(int board[3][3], WINDOW *board_win);
 void print_menu(int which);
 void print_status(int turn);
-int print_endgame(int who_won);
+void print_end_msg(int who_won);
 void print_error(int error_num);
 
 // Create windows used in game
@@ -507,34 +507,27 @@ void print_status(int turn)
     wrefresh(status_win);
 }
 
-// Print message & prompt after game ending
-// If who_won = 1 -> computer or player 1, who_won = -1 -> otherwise
-int print_endgame(int who_won)
+// Print game ending message
+void print_end_msg(int who_won)
 {
-    char *prompt     =  "Play again?";
     char *win_msg[]  = {"Congratulations",
                         "PLAYER ?",
                         "You won"};
     char *lose_msg[] = {"You lost",
                         "Better luck next time"};
 
-    char *choices[] =             {"|        New  game        |", "|           Quit          |"};
-    char *choices_highlighted[] = {"/        New  game        /", "/           Quit          /"};
+    wclear(endgame_win);
+    wclear(main_win);
+
+    box(main_win, 0, 0);
+    wrefresh(endgame_win);
+    wrefresh(main_win);
 
     // Get window size & printing position
     int rows, cols, x1, x2;
     getmaxyx(endgame_win, rows, cols);
 
-    // Clear windows
-    wclear(endgame_win);
-    wclear(main_win);
-
-    box(main_win, 0, 0);
-
-    wrefresh(endgame_win);
-    wrefresh(main_win);
-
-    // Print game ending message
+    // Computer mode 
     if (which_mode == COMPU_MODE)
     {
         // User won
@@ -556,6 +549,7 @@ int print_endgame(int who_won)
             mvwprintw(endgame_win, 1, x2, "%s", lose_msg[1]);
         }
     }
+    // Two user mode
     else if (which_mode == HUMAN_MODE)
     {
         // Find winner 
@@ -568,24 +562,7 @@ int print_endgame(int who_won)
         mvwprintw(endgame_win, 1, x2, "%s", winner);
     }
 
-    // Print initial state of options
-    print_options(endgame_win, prompt, choices_highlighted, choices, 0);
     wrefresh(endgame_win);
-
-    // Take user choice
-    int ch, which;
-    which = 0;
-    while ((ch = getch()) != 'q')
-    {
-        // Check if user made a choice
-        if (navigate(ch, &which))
-        {
-            return which - 1;
-        }
-
-        // Print choices with highlighting
-        print_options(endgame_win, prompt, choices_highlighted, choices, which);
-    }
 }
 
 // Print error messages

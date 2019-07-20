@@ -56,13 +56,7 @@ int use_menu();
 
 void fill_boards();
 
-void print_side_menu(int which_win);
-void print_boards(int x, int y);
-void print_board(int board[3][3], WINDOW *board_win);
-void print_menu(int which);
-void print_status(int turn);
-int print_endgame(int who_won);
-void print_error(int error_num);
+int play_again(int who_won);
 
 // Play games -> both modes 
 void play_game()
@@ -97,7 +91,7 @@ void play_game()
         no_games++;
 
         // User quit or Game ended 
-        if (!who_won || (who_won != 2 && print_endgame(who_won)))
+        if (!who_won || (who_won != 2 && play_again(who_won)))
         {
             break;
         }
@@ -443,6 +437,36 @@ void fill_boards()
         }
 
         dead_boards[i] = 0;
+    }
+}
+
+// Prompt user for another game & print game ending message
+int play_again(int who_won)
+{
+    char *prompt = "Play again?"; 
+    char *choices[] =             {"|        New  game        |", "|           Quit          |"};
+    char *choices_highlighted[] = {"/        New  game        /", "/           Quit          /"};
+
+    // Print message
+    print_end_msg(who_won);
+
+    // Print initial state of options
+    print_options(endgame_win, prompt, choices_highlighted, choices, 0);
+    wrefresh(endgame_win);
+
+    // Take user choice
+    int ch, which;
+    which = 0;
+    while ((ch = getch()) != 'q')
+    {
+        // Check if user made a choice
+        if (navigate(ch, &which))
+        {
+            return which - 1;
+        }
+
+        // Print choices with highlighting
+        print_options(endgame_win, prompt, choices_highlighted, choices, which);
     }
 }
 
