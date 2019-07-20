@@ -13,6 +13,14 @@
 
 #define NO_BOARDS 3
 
+// Menu choices
+#define RESTART  0
+#define CONTINUE 1
+#define UNDO     2
+#define REDO     3
+#define SAVE     4
+#define QUIT     5
+
 // Game boards -> if element = 0 -> empty space, 1 -> X
 int boards[NO_BOARDS][3][3];
 
@@ -40,8 +48,9 @@ void play_game();
 int play_two_user();
 int play_compu();
 
-int navigate_boards(int ch, int *x_pr, int *y_pr);
-int side_menu(int which_win);
+int navigate_side_menu(int which_win);
+int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice);
+int use_menu();
 
 void fill_boards();
 
@@ -58,10 +67,6 @@ void play_game()
 {
     no_games = no_wins = no_loses = 0;
 
-/*    print_menu(0);
-    print_side_menu(BOARDS_WIN);
-    getch();
-*/
     // Play games until user quits
     for (;;)
     {
@@ -90,7 +95,7 @@ void play_game()
         no_games++;
 
         // User quit or Game ended 
-        if (!who_won || print_endgame(who_won))
+        if (!who_won || (who_won != 2 && print_endgame(who_won)))
         {
             break;
         }
@@ -115,8 +120,9 @@ int play_two_user()
         print_status(turn);
 
         // Navigate through boards & take user input
-        int x, y, ch;
+        int x, y, ch, menu_choice;
         x = y = 0;
+        menu_choice = -1;
         while ((ch = getch()) != 'q')
         {
             // Clear error window 
@@ -127,7 +133,7 @@ int play_two_user()
             wrefresh(status_win);
 
             // Check if user made a choice
-            if (navigate_boards(ch, &x, &y))
+            if (navigate_boards(ch, &x, &y, &menu_choice))
             {
                 // Validate move
                 if (is_valid(x, y))
@@ -141,6 +147,33 @@ int play_two_user()
                 {
                     print_error(0);
                 }
+            }
+            // If user made a menu choice
+            else if (menu_choice != -1)
+            {
+                // Check choice
+                switch (menu_choice)
+                {
+                    case RESTART:
+                        return 2;
+                        break;
+                    case CONTINUE:
+                        break;
+/*                  case UNDO:
+ *                  case REDO:
+ *                  case SAVE:*/
+                    case QUIT:
+                        return 0;
+                        break;
+                }
+
+                // Re-print boards
+                wclear(main_win);
+                box(main_win, 0, 0);
+                wrefresh(main_win);
+
+                print_side_menu(BOARDS_WIN);
+                print_status(turn);
             }
 
             // Print game boards
@@ -185,9 +218,55 @@ int play_compu()
     // ...
 }
 
+// Use side menu -> choose shown window
+int navigate_side_menu(int which_win)
+{
+    int navigate = which_win;
+
+    // Navigate through choices & take user choice
+    int ch;
+    while ((ch = getch()) != 'q')
+    {
+        wclear(side_menu_win);
+        wclear(error_win);
+        wrefresh(error_win);
+
+        switch (ch)
+        {
+            case KEY_UP:
+            case 'k':
+                navigate--;
+                // Check borders
+                if (navigate < 0)
+                {
+                    navigate++;
+                }
+                break;
+            case KEY_DOWN:
+            case 'j':
+                navigate++;
+                // Check borders
+                if (navigate > 1)
+                {
+                    navigate--;
+                }
+                break;
+            // Enter key -> user made a choice
+            case 10:
+                return navigate;
+            // Invalid key
+            default:
+                print_error(2);
+        }
+        
+        // Print choices
+        print_side_menu(navigate);
+    }
+}
+
 // Navigate between boards
 // Returns 1: if user made a choice, 0: otherwise
-int navigate_boards(int ch, int *x_pr, int *y_pr)
+int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice)
 {
     // Set variables for use inside function
     int x, y;
@@ -243,9 +322,11 @@ int navigate_boards(int ch, int *x_pr, int *y_pr)
             break;
         // Use side menu
         case 's':
-            if (side_menu(BOARDS_WIN) == MENU_WIN)
+            if (navigate_side_menu(BOARDS_WIN) == MENU_WIN)
             {
-                // ...
+                // Take user choice
+                *menu_choice = use_menu();
+                return 0;
             }
             break;
         // User made a choice -> enter
@@ -276,16 +357,25 @@ int navigate_boards(int ch, int *x_pr, int *y_pr)
     return 0;
 }
 
-// Use side menu -> choose shown window
-int side_menu(int which_win)
+// Use menu & return user choice
+int use_menu()
 {
-    int navigate = which_win;
+    // Print menu on top of boards win
+    wclear(main_win);
+    box(main_win, 0, 0);
+    wrefresh(main_win);
 
-    // Navigate through choices & take user choice
-    int ch;
+    print_side_menu(MENU_WIN);
+    wrefresh(side_menu_win);
+
+    print_menu(-1);
+    
+    // Navigate through menu & take user choice
+    int ch, which;
+    which = -1;
+
     while ((ch = getch()) != 'q')
     {
-        wclear(side_menu_win);
         wclear(error_win);
         wrefresh(error_win);
 
@@ -293,32 +383,47 @@ int side_menu(int which_win)
         {
             case KEY_UP:
             case 'k':
-                navigate--;
-                // Check borders
-                if (navigate < 0)
+                which--;
+                // Check border
+                if (which < 0)
                 {
-                    navigate++;
+                    which = 0;
                 }
                 break;
             case KEY_DOWN:
             case 'j':
-                navigate++;
-                // Check borders
-                if (navigate > 1)
+                which++;
+                // Check border
+                if (which > 5)
                 {
-                    navigate--;
+                    which = 5;
                 }
                 break;
-            // Enter key -> user made a choice
+            // Enter key
             case 10:
-                return which_win;
+                // Check choice
+                if (which < 0 || which > 5)
+                {
+                    print_error(1);
+                }
+                else
+                {
+                    return which;
+                }
+                break;
             // Invalid key
             default:
                 print_error(2);
         }
-        
-        // Print choices
-        print_side_menu(navigate);
+
+        // Print menu
+        print_menu(which);
+    }
+
+    // Check if user quit
+    if (ch == 'q')
+    {
+        return QUIT;
     }
 }
 
@@ -502,6 +607,7 @@ void print_menu(int which)
                                 "     -> Quit                            "};
     
     // Print borders & tag
+    wclear(menu_win);
     box(menu_win, 0, 0);
     mvwprintw(menu_win, 0, 1, "%s", tag);
 
