@@ -16,12 +16,15 @@
 #define NO_BOARDS 3
 
 // Menu choices
+#define NO_MENU_CHOICES 7
+
 #define RESTART  0
 #define CONTINUE 1
 #define UNDO     2
 #define REDO     3
-#define SAVE     4
-#define QUIT     5
+#define STATS    4
+#define SAVE     5 
+#define QUIT     6 
 
 // Game boards -> if element = 0 -> empty space, 1 -> X
 int boards[NO_BOARDS][3][3];
@@ -29,10 +32,10 @@ int boards[NO_BOARDS][3][3];
 // Determine if a board is dead -> 1: dead, 0: not
 int dead_boards[NO_BOARDS];
 
-// Number of games played by user + no. of wins & no. of loses
-int no_games;
-int no_wins;
-int no_loses;
+// Number of games played by user + no. of wins & no. of loses (2 user games, engine games)
+int no_games[2];
+int no_wins[2];
+int no_loses[2];
 
 extern int which_mode;
 
@@ -42,6 +45,7 @@ extern WINDOW *menu_win;
 extern WINDOW *side_menu_win;
 extern WINDOW *error_win;
 extern WINDOW *status_win;
+extern WINDOW *stats_win;
 extern WINDOW *endgame_win;
 
 /* FUNCTIONS */
@@ -50,9 +54,10 @@ void play_game();
 int play_two_user();
 int play_compu();
 
-int navigate_side_menu(int which_win);
 int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice);
+
 int use_menu();
+int use_side_menu(int which_win);
 
 void fill_boards();
 
@@ -61,7 +66,10 @@ int play_again(int who_won);
 // Play games -> both modes 
 void play_game()
 {
-    no_games = no_wins = no_loses = 0;
+    for (int i = 0; i < 2; i++)
+    {
+        no_games[i] = no_wins[i] = no_loses[i] = 0;
+    }
 
     // Play games until user quits
     for (;;)
@@ -88,8 +96,6 @@ void play_game()
             who_won = play_compu();
         }
 
-        no_games++;
-
         // User quit or Game ended 
         if (!who_won || (who_won != 2 && play_again(who_won)))
         {
@@ -101,8 +107,9 @@ void play_game()
 // Two user game -> return winner
 int play_two_user()
 {
-    // Set turn 
+    // Set turn & increase no. of games
     int turn = 1;
+    no_games[0]++;
 
     // Display initial state of windows
     print_boards(-1, -1);
@@ -156,12 +163,18 @@ int play_two_user()
                     case CONTINUE:
                         break;
 /*                  case UNDO:
- *                  case REDO:
- *                  case SAVE:*/
+ *                  case REDO:*/
+                    case STATS:
+                        print_stats(no_games, no_wins, no_loses);
+                        break;
+/*                  case SAVE:*/
                     case QUIT:
                         return 0;
                         break;
                 }
+
+                // Re-set menu choice
+                menu_choice = -1;
 
                 // Re-print boards
                 wclear(main_win);
@@ -191,8 +204,9 @@ int play_two_user()
 // Game against engine
 int play_compu()
 {
-    // Set turn variable
+    // Set turn & increase no. of games 
     int turn = 1;
+    no_games[1]++;
 
     // Choose playing order
     if (playing_order())
@@ -212,52 +226,6 @@ int play_compu()
     getch();
     return 0;
     // ...
-}
-
-// Use side menu -> choose shown window
-int navigate_side_menu(int which_win)
-{
-    int navigate = which_win;
-
-    // Navigate through choices & take user choice
-    int ch;
-    while ((ch = getch()) != 'q')
-    {
-        wclear(side_menu_win);
-        wclear(error_win);
-        wrefresh(error_win);
-
-        switch (ch)
-        {
-            case KEY_UP:
-            case 'k':
-                navigate--;
-                // Check borders
-                if (navigate < 0)
-                {
-                    navigate++;
-                }
-                break;
-            case KEY_DOWN:
-            case 'j':
-                navigate++;
-                // Check borders
-                if (navigate > 1)
-                {
-                    navigate--;
-                }
-                break;
-            // Enter key -> user made a choice
-            case 10:
-                return navigate;
-            // Invalid key
-            default:
-                print_error(2);
-        }
-        
-        // Print choices
-        print_side_menu(navigate);
-    }
 }
 
 // Navigate between boards
@@ -318,7 +286,7 @@ int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice)
             break;
         // Use side menu
         case 's':
-            if (navigate_side_menu(BOARDS_WIN) == MENU_WIN)
+            if (use_side_menu(BOARDS_WIN) == MENU_WIN)
             {
                 // Take user choice
                 *menu_choice = use_menu();
@@ -390,15 +358,15 @@ int use_menu()
             case 'j':
                 which++;
                 // Check border
-                if (which > 5)
+                if (which > NO_MENU_CHOICES - 1)
                 {
-                    which = 5;
+                    which = NO_MENU_CHOICES - 1;
                 }
                 break;
             // Enter key
             case 10:
                 // Check choice
-                if (which < 0 || which > 5)
+                if (which < 0 || which > NO_MENU_CHOICES - 1)
                 {
                     print_error(1);
                 }
@@ -420,6 +388,52 @@ int use_menu()
     if (ch == 'q')
     {
         return QUIT;
+    }
+}
+
+// Use side menu -> choose shown window
+int use_side_menu(int which_win)
+{
+    int navigate = which_win;
+
+    // Navigate through choices & take user choice
+    int ch;
+    while ((ch = getch()) != 'q')
+    {
+        wclear(side_menu_win);
+        wclear(error_win);
+        wrefresh(error_win);
+
+        switch (ch)
+        {
+            case KEY_UP:
+            case 'k':
+                navigate--;
+                // Check borders
+                if (navigate < 0)
+                {
+                    navigate++;
+                }
+                break;
+            case KEY_DOWN:
+            case 'j':
+                navigate++;
+                // Check borders
+                if (navigate > 1)
+                {
+                    navigate--;
+                }
+                break;
+            // Enter key -> user made a choice
+            case 10:
+                return navigate;
+            // Invalid key
+            default:
+                print_error(2);
+        }
+        
+        // Print choices
+        print_side_menu(navigate);
     }
 }
 

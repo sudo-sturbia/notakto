@@ -14,6 +14,7 @@ void print_boards(int x, int y);
 void print_board(int board[3][3], WINDOW *board_win);
 void print_menu(int which);
 void print_status(int turn);
+void print_stats(int no_games[2], int no_wins[2], int no_loses[2]);
 void print_end_msg(int who_won);
 void print_error(int error_num);
 

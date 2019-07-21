@@ -2,8 +2,6 @@
 #include <ncurses.h>
 #include <string.h>
 
-#include "initialization.h"
-
 /* DEFINITIONS */
 #define LOGO_WIDTH 62
 #define LOGO_HEIGHT 5
@@ -12,6 +10,7 @@
 #define COMPU_MODE 1
 
 #define NO_BOARDS 3
+#define NO_MENU_CHOICES 7
 
 /* WINDOWS */
 WINDOW *main_win;
@@ -22,6 +21,7 @@ WINDOW *menu_win;
 WINDOW *side_menu_win;
 WINDOW *error_win;
 WINDOW *status_win;
+WINDOW *stats_win;
 WINDOW *endgame_win;
 
 extern int boards[NO_BOARDS][3][3];
@@ -40,6 +40,7 @@ void print_boards(int x, int y);
 void print_board(int board[3][3], WINDOW *board_win);
 void print_menu(int which);
 void print_status(int turn);
+void print_stats(int no_games[2], int no_wins[2], int no_loses[2]);
 void print_end_msg(int who_won);
 void print_error(int error_num);
 
@@ -88,7 +89,7 @@ void create_windows()
     boards_win[2] = newwin(height, width, y, x + width * 2 + 8 * 2);
 
     // Create menu window -> inside main window
-    height = 10;
+    height = 11;
     width = 50;
     y = (rows - height - 9) / 2;
     x = (cols - width) / 2;
@@ -118,6 +119,14 @@ void create_windows()
     x = 2;
 
     status_win = newwin(height, width, y, x);
+
+    // Create stats window
+    height = 20;
+    width = 48;
+    y = (rows - height - 9) / 2;
+    x = (cols - width) / 2;
+
+    stats_win = newwin(height, width, y, x);
 
     // Create game ending window
     height = 10;
@@ -419,6 +428,7 @@ void print_menu(int which)
                     " - Continue",
                     " - Undo last move",
                     " - Redo last move",
+                    " - Playing stats",
                     " - Save game",
                     " - Quit"};
 
@@ -426,6 +436,7 @@ void print_menu(int which)
                                 "     -> Continue                        ",
                                 "     -> Undo last move                  ",
                                 "     -> Redo last move                  ",
+                                "     -> Playing stats                   ",
                                 "     -> Save game                       ",
                                 "     -> Quit                            "};
     
@@ -435,7 +446,7 @@ void print_menu(int which)
     mvwprintw(menu_win, 0, 1, "%s", tag);
 
     // Print menu with choice highlighted
-    for (int i = 0, no_choices = 6; i < no_choices; i++)
+    for (int i = 0; i < NO_MENU_CHOICES; i++)
     {
         // Highlighted choice
         if (i == which)
@@ -505,6 +516,44 @@ void print_status(int turn)
     }
 
     wrefresh(status_win);
+}
+
+// Print game stats 
+void print_stats(int no_games[2], int no_wins[2], int no_loses[2])
+{
+    // Clear main window
+    wclear(main_win);
+    box(main_win, 0 , 0);
+    wrefresh(main_win);
+
+    // Print stats
+    int which_str = 0;
+
+    mvwprintw(stats_win, 1, 0,  "You played: %3i games ",              no_games[0] + no_games[1]);
+
+    mvwprintw(stats_win, 4, 0,  "      -> %3i vs COMPUTER",   no_games[1]);
+
+    mvwprintw(stats_win, 5, 0,  "      ------------------ ------------------ ");
+    mvwprintw(stats_win, 6, 0,  "     |  You won         | %3i              |", no_wins[1]);
+    mvwprintw(stats_win, 7, 0,  "      ------------------ ------------------ ");
+    mvwprintw(stats_win, 8, 0,  "     |  The engine won  | %3i              |", no_loses[1]);
+    mvwprintw(stats_win, 9, 0,  "      ------------------ ------------------ ");
+
+    mvwprintw(stats_win, 12, 0, "      -> %3i TWO PLAYER GAMES",   no_games[2]);
+
+    mvwprintw(stats_win, 13, 0, "      ------------------ ------------------ ");
+    mvwprintw(stats_win, 14, 0, "     |  Player 1 won    | %3i              |", no_wins[0]);
+    mvwprintw(stats_win, 15, 0, "      ------------------ ------------------ ");
+    mvwprintw(stats_win, 16, 0, "     |  Player 2 won    | %3i              |", no_loses[0]);
+    mvwprintw(stats_win, 17, 0, "      ------------------ ------------------ ");
+
+    mvwprintw(stats_win, 19, 0, "         PRESS ANY KEY TO RETURN TO GAME");
+
+    wrefresh(stats_win);
+    getch();
+
+    wclear(stats_win);
+    wrefresh(stats_win);
 }
 
 // Print game ending message
