@@ -2,7 +2,7 @@
 #define MAIN_SCR_H_INCLUDED
 
 /* FUNCTIONS */
-void play_game();
+void init_game();
 
 int play_two_user();
 int play_compu();
@@ -14,6 +14,14 @@ int use_side_menu(int which_win, int turn);
 
 void fill_boards();
 
+void initial_msg();
+
+int choose_mode();
+int playing_order();
 int play_again(int who_won);
+
+int navigate(int ch, int *which_pr);
+
+void print_options(WINDOW *which_win, char *prompt, char *highlighted[], char *not_highlighted[], int which);
 
 #endif
