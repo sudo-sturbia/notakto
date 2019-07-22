@@ -32,7 +32,18 @@ void print_options(WINDOW *which_win, char *prompt, char *highlighted[], char *n
 void init_game()
 {
     // Create windows needed in game
-    create_windows();
+    int ch;
+    do {
+        if (create_windows())
+        {
+            break;
+        }
+        else
+        {
+            clear();
+            print_error(-1);
+        }
+    }while ((ch = getch()) == KEY_RESIZE);
 
     // Display static windows
     print_logo();

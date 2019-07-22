@@ -54,10 +54,10 @@ void play_game();
 int play_two_user();
 int play_compu();
 
-int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice);
+int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice, int turn);
 
 int use_menu();
-int use_side_menu(int which_win);
+int use_side_menu(int which_win, int turn);
 
 void fill_boards();
 
@@ -136,7 +136,7 @@ int play_two_user()
             wrefresh(status_win);
 
             // Check if user made a choice
-            if (navigate_boards(ch, &x, &y, &menu_choice))
+            if (navigate_boards(ch, &x, &y, &menu_choice, turn))
             {
                 // Validate move
                 if (is_valid(x, y))
@@ -230,7 +230,7 @@ int play_compu()
 
 // Navigate between boards
 // Returns 1: if user made a choice, 0: otherwise
-int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice)
+int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice, int turn)
 {
     // Set variables for use inside function
     int x, y;
@@ -286,7 +286,7 @@ int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice)
             break;
         // Use side menu
         case 's':
-            if (use_side_menu(BOARDS_WIN) == MENU_WIN)
+            if (use_side_menu(BOARDS_WIN, turn) == MENU_WIN)
             {
                 // Take user choice
                 *menu_choice = use_menu();
@@ -308,6 +308,16 @@ int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice)
                 
                 return 1;
             }
+            break;
+        // Terminal resized
+        case KEY_RESIZE:
+            // Re-create windows
+            adjust_windows();
+
+            // Re-print windows
+            print_side_menu(BOARDS_WIN);
+            print_status(turn);
+
             break;
         // Invalid key
         default:
@@ -375,6 +385,13 @@ int use_menu()
                     return which;
                 }
                 break;
+            // Terminal resized
+            case KEY_RESIZE:
+                // Re-create windows
+                adjust_windows();
+                print_side_menu(MENU_WIN);
+
+                break;
             // Invalid key
             default:
                 print_error(2);
@@ -392,7 +409,7 @@ int use_menu()
 }
 
 // Use side menu -> choose shown window
-int use_side_menu(int which_win)
+int use_side_menu(int which_win, int turn)
 {
     int navigate = which_win;
 
@@ -427,6 +444,22 @@ int use_side_menu(int which_win)
             // Enter key -> user made a choice
             case 10:
                 return navigate;
+            // Terminal resized
+            case KEY_RESIZE:
+                // Re-create windows
+                adjust_windows();
+
+                // Re-print windows
+                if (which_win == BOARDS_WIN)
+                {
+                    print_boards(-1, -1);
+                    print_status(turn);
+                }
+                else if (which_win == MENU_WIN)
+                {
+                    print_menu(-1);
+                }
+                break;
             // Invalid key
             default:
                 print_error(2);

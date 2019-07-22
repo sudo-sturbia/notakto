@@ -9,6 +9,9 @@
 #define HUMAN_MODE 0
 #define COMPU_MODE 1
 
+#define BOARDS_WIN 0 
+#define MENU_WIN   1 
+
 #define NO_BOARDS 3
 #define NO_MENU_CHOICES 7
 
@@ -204,19 +207,21 @@ void destroy_windows()
 }
 
 /* Deal with terminal resizing */
+// which_win -> indicates whether boards or menu is being displayed
+// x, y -> which choice to highlight 
 void adjust_windows()
 {
     // Remove all windows
     clear_windows();
     destroy_windows();
 
-    // Re-initialize curses mode
-    endwin();
-    refresh();
-
     // Re-create windows
     int ch;
     do{
+        // Re-initialize curses mode
+        endwin();
+        refresh();
+
         // Check if windows were created correctly
         if (create_windows())
         {
@@ -229,9 +234,12 @@ void adjust_windows()
         }
     }while ((ch = getch()) == KEY_RESIZE);
 
-    // Re-print main window
+    // Re-print windows
     box(main_win, 0, 0);
     wrefresh(main_win);
+
+    print_logo();
+    print_instructions();
 }
 
 /* Printing functions */
