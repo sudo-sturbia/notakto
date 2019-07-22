@@ -28,9 +28,11 @@ extern int boards[NO_BOARDS][3][3];
 extern int which_mode;
 
 /* FUNCTIONS */
-void create_windows();
+int create_windows();
 void clear_windows();
 void destroy_windows();
+
+void adjust_windows();
 
 void print_logo();
 void print_instructions();
@@ -45,96 +47,114 @@ void print_end_msg(int who_won);
 void print_error(int error_num);
 
 // Create windows used in game
-void create_windows()
+// Returns 1: windows created, 0: otherwise
+int create_windows()
 {
+    // Minimum terminal size to play game
+    int m_width, m_height;
+    m_width  = 96;
+    m_height = 24;
+
     // Get screen size
     int rows, cols;
     getmaxyx(stdscr, rows, cols);
 
-    // Variables to represent printing position & window size
-    int x, y, height, width;
+    if (rows >= m_height && cols >= m_width)
+    {
+        // Variables to represent printing position & window size
+        int x, y, height, width;
 
-    // Create logo window
-    height = 9;
-    width = 65;
-    y = rows - 9;
-    x = 0;
+        // Create logo window
+        height = 9;
+        width = 65;
+        y = rows - 9;
+        x = 0;
 
-    logo_win = newwin(height, width, y, x);
+        logo_win = newwin(height, width, y, x);
 
-    // Create instructions window
-    height = 9;
-    width = cols - 66;
-    y = rows - 9;
-    x = 66;
+        // Create instructions window
+        height = 9;
+        width = cols - 66;
+        y = rows - 9;
+        x = 66;
 
-    instructions_win = newwin(height, width, y, x);
+        instructions_win = newwin(height, width, y, x);
 
-    // Create main game window
-    height = rows - 9;
-    width = cols;
-    y = 0;
-    x = 0;
+        // Create main game window
+        height = rows - 9;
+        width = cols;
+        y = 0;
+        x = 0;
 
-    main_win = newwin(height, width, y, x);
+        main_win = newwin(height, width, y, x);
 
-    // Create boards windows -> inside main window
-    height = 7;
-    width = 13;
-    y = (rows - height - 9) / 2;
-    x = (cols - (3 * width + 2 * 8)) / 2;
+        // Create side menu window 
+        height = 6;
+        width = 20;
+        y = 2;
+        x = 3;
 
-    boards_win[0] = newwin(height, width, y, x);
-    boards_win[1] = newwin(height, width, y, x + width * 1 + 8 * 1);
-    boards_win[2] = newwin(height, width, y, x + width * 2 + 8 * 2);
+        side_menu_win = newwin(height, width, y, x);
 
-    // Create menu window -> inside main window
-    height = 11;
-    width = 50;
-    y = (rows - height - 9) / 2;
-    x = (cols - width) / 2;
+        // Create boards windows -> inside main window
+        height = 7;
+        width = 13;
+        y = (rows - height - 9) / 2;
+        x = (cols - (3 * width + 2 * 8)) / 2;
 
-    menu_win = newwin(height, width, y, x);
+        x = (x > (20 + 3)) ? x : (20 + 3 + 2);             //  Boards & side menu don't overlap
 
-    // Create side menu window 
-    height = 6;
-    width = 20;
-    y = 2;
-    x = 3;
+        boards_win[0] = newwin(height, width, y, x);
+        boards_win[1] = newwin(height, width, y, x + width * 1 + 8 * 1);
+        boards_win[2] = newwin(height, width, y, x + width * 2 + 8 * 2);
 
-    side_menu_win = newwin(height, width, y, x);
+        // Create menu window -> inside main window
+        height = 11;
+        width = 50;
+        y = (rows - height - 9) / 2;
+        x = (cols - width) / 2;
 
-    // Create error window -> inside main window
-    height = 3;
-    width = 25;
-    y = rows - 9 - 4;
-    x = (cols - 25) / 2;
+        menu_win = newwin(height, width, y, x);
 
-    error_win = newwin(height, width, y, x);
+        // Create error window -> inside main window
+        height = 3;
+        width = 25;
+        y = rows - 9 - 4;
+        x = (cols - 25) / 2;
 
-    // Create status (turn) window
-    height = 3;
-    width = 24;
-    y = rows - 9 - 4;
-    x = 2;
+        error_win = newwin(height, width, y, x);
 
-    status_win = newwin(height, width, y, x);
+        // Create status (turn) window -> inside main window
+        height = 3;
+        width = 24;
+        y = rows - 9 - 4;
+        x = 2;
 
-    // Create stats window
-    height = 20;
-    width = 48;
-    y = (rows - height - 9) / 2;
-    x = (cols - width) / 2;
+        status_win = newwin(height, width, y, x);
 
-    stats_win = newwin(height, width, y, x);
+        // Create stats window -> inside main window
+        height = 20;
+        width = 48;
+        y = (rows - height - 9) / 2;
+        x = (cols - width) / 2;
 
-    // Create game ending window
-    height = 10;
-    width = 60;
-    y = (rows - height - 9) / 2;
-    x = (cols - width) / 2;
+        stats_win = newwin(height, width, y, x);
 
-    endgame_win = newwin(height, width, y, x);
+        // Create game ending window -> inside main window
+        height = 10;
+        width = 60;
+        y = (rows - height - 9) / 2;
+        x = (cols - width) / 2;
+
+        endgame_win = newwin(height, width, y, x);
+
+        return 1;
+    }
+    else
+    {
+        // Terminal size is too small
+        return 0;
+    }
 }
 
 // Clear all windows & remove borders
@@ -181,6 +201,37 @@ void destroy_windows()
     delwin(menu_win);
     delwin(error_win);
     delwin(status_win);
+}
+
+/* Deal with terminal resizing */
+void adjust_windows()
+{
+    // Remove all windows
+    clear_windows();
+    destroy_windows();
+
+    // Re-initialize curses mode
+    endwin();
+    refresh();
+
+    // Re-create windows
+    int ch;
+    do{
+        // Check if windows were created correctly
+        if (create_windows())
+        {
+            break;
+        }
+        else
+        {
+            clear();
+            print_error(-1);
+        }
+    }while ((ch = getch()) == KEY_RESIZE);
+
+    // Re-print main window
+    box(main_win, 0, 0);
+    wrefresh(main_win);
 }
 
 /* Printing functions */
@@ -249,9 +300,9 @@ void print_instructions()
 {
     char *instructions[] = {" INSTRUCTIONS:",
                             "- To navigate:",
-                            "                         ^",
-                            "                 < h  j  k  l >",
-                            "                      v",
+                            "                   ^",
+                            "           < h  j  k  l >",
+                            "                v",
                             "\n",
                             "- For side menu:  s",
                             "- To quit:        q"};
@@ -615,6 +666,7 @@ void print_end_msg(int who_won)
 }
 
 // Print error messages
+// if error_num = -1 -> print size error
 void print_error(int error_num)
 {
     // Error messages
@@ -623,17 +675,33 @@ void print_error(int error_num)
 
     // Get window size & printing position
     int rows, cols, y, x;
-    getmaxyx(error_win, rows, cols);
 
-    x = (cols - strlen(error_msgs[error_num])) / 2;
-    y = 1;
+    // Print terminal size error in standard screen
+    if (error_num == -1)
+    {
+        char *error_msg = "Terminal size too small. Please resize terminal";
 
-    // Clear error window
-    wclear(error_win);
+        getmaxyx(stdscr, rows, cols);
+        x = (cols - strlen(error_msg)) / 2;
+        x = (x >= 0) ? x : 0;                // X >= 0
+        y = rows / 2;
 
-    // Print error message
-    mvwprintw(error_win, y, x, "%s%s", tag, error_msgs[error_num]);
+        mvprintw(y, x, "%s", error_msg);
+        refresh();
+    }
+    else 
+    {
+        getmaxyx(error_win, rows, cols);
 
-    wrefresh(error_win);
+        x = (cols - strlen(error_msgs[error_num])) / 2;
+        y = 1;
+
+        // Clear error window
+        wclear(error_win);
+
+        // Print error message
+        mvwprintw(error_win, y, x, "%s%s", tag, error_msgs[error_num]);
+        wrefresh(error_win);
+    }
 }
 
