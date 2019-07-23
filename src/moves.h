@@ -15,6 +15,8 @@ int is_finished();
 void mark_boards();
 int is_dead(int board[3][3]);
 
+void save_game();
+
 node *create_node(int value[NO_BOARDS][3][3], node *next);
 
 void init_stacks();

@@ -206,7 +206,9 @@ int play_two_user()
                     case STATS:
                         print_stats(no_games, no_wins, no_loses);
                         break;
-/*                  case SAVE:*/
+                    case SAVE:
+                        save_game(main_win);
+                        break;
                     case QUIT:
                         return 0;
                         break;

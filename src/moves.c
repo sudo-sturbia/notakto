@@ -30,6 +30,8 @@ int is_finished();
 void mark_boards();
 int is_dead(int board[3][3]);
 
+void save_game();
+
 node *create_node(int value[NO_BOARDS][3][3], node *next);
 
 void init_stacks();
@@ -140,6 +142,92 @@ int is_dead(int board[3][3])
     }
 
     return 0;
+}
+
+/* SAVE & LOAD GAMES */
+
+// Save current game
+void save_game(WINDOW *main_win)
+{
+    char *warning = "WARNING: saving this game overwrites any previously saved games.";
+    char *prompt  = "Press a to abort, any other key to proceed";
+    char *success = "Game succefully saved, press any key to continue";
+
+    // Print warning
+    int ch;
+    int rows, cols, x, y;
+    getmaxyx(main_win, rows, cols);
+
+    x = (cols - strlen(warning)) / 2;
+    y = rows / 2;
+
+    wclear(main_win);
+    box(main_win, 0, 0);
+    mvwprintw(main_win, y, x, "%s", warning);
+
+    x = (cols - strlen(prompt)) / 2;
+    y += 1;
+
+    mvwprintw(main_win, y, x, "%s", prompt);
+    wrefresh(main_win);
+
+    // User aborted saving
+    ch = getch();
+    if (ch == 'a')
+    {
+        return;
+    }
+    else if (ch == KEY_RESIZE)
+    {
+        // If terminal is resized
+        adjust_windows();
+    }
+
+    // Open saving file
+    FILE *game_file;
+    game_file = fopen("game.txt", "w");
+    
+    if (game_file == NULL)
+    {
+        print_error(7);
+        return;
+    }
+
+    // Save game data
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            for (int k = 0; k < 3; k++)
+            {
+                char ch = (boards[i][j][k] == 1) ? '1' : '0';
+                fputc(ch, game_file);
+            }
+        }
+    }
+
+    for (int i = 0; i < 3; i++)
+    {
+        char ch = (dead_boards[i] == 1) ? '1' : '0';
+        fputc(dead_boards[i], game_file);
+    }
+
+    fclose(game_file);
+    
+    wclear(main_win);
+    box(main_win, 0, 0);
+
+    x = (cols - strlen(success)) / 2;
+    y -= 1;
+
+    mvwprintw(main_win, y, x, "%s", success);
+    wrefresh(main_win);
+
+    if (getch() == KEY_RESIZE)
+    {
+        // If terminal was resized
+        adjust_windows();
+    }
 }
 
 /* UNDO & REDO */
