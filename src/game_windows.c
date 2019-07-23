@@ -136,8 +136,8 @@ int create_windows()
         status_win = newwin(height, width, y, x);
 
         // Create stats window -> inside main window
-        height = 20;
-        width = 48;
+        height = 10;
+        width = 90;
         y = (rows - height - 9) / 2;
         x = (cols - width) / 2;
 
@@ -585,31 +585,48 @@ void print_stats(int no_games[2], int no_wins[2], int no_loses[2])
     box(main_win, 0 , 0);
     wrefresh(main_win);
 
+    // Calculate percentages
+    float comp_wins, comp_loses, player1_wins, player2_wins;
+    if (no_games[0] != 0)
+    {
+        comp_wins = (no_wins[0] * 100.0) / no_games[0];
+        comp_loses = (no_loses[0] * 100.0) / no_games[0];
+    }
+    else
+    {
+        comp_wins = comp_loses = 0;
+    }
+
+    if (no_games[1] != 0)
+    {
+        player1_wins = (no_wins[1] * 100.0) / no_games[1];
+        player2_wins = (no_loses[1] * 100.0) / no_games[1];
+    }
+    else
+    {
+        player1_wins = player2_wins = 0;
+    }
+
     // Print stats
-    int which_str = 0;
+    int rows, cols;
+    rows = 10; 
+    cols = 90;
 
-    mvwprintw(stats_win, 1, 0,  "You played: %3i games ",              no_games[0] + no_games[1]);
+    mvwprintw(stats_win, 1, 0, "| No. of games | %3i", no_games[0] + no_games[1]);
 
-    mvwprintw(stats_win, 4, 0,  "      -> %3i vs COMPUTER",   no_games[1]);
+    mvwprintw(stats_win, 3, 0, "| vs COMPUTER          |  %3i                  | TWO PLAYER           | %3i", no_games[0], no_games[1]);
+    mvwprintw(stats_win, 4, 0, "| No. of wins                                  | PLAYER 1 wins ");
+    mvwprintw(stats_win, 5, 0, " --------------->  %3i | percentage: %%%5.2f     --------------->  %3i | percentage: %%%5.2f", no_wins[0], comp_wins, no_wins[1], player1_wins);
+    mvwprintw(stats_win, 6, 0, "| No. of loses                                 | PLAYER 2 wins ");
+    mvwprintw(stats_win, 7, 0, " --------------->  %3i | percentage: %%%5.2f     --------------->  %3i | percentage: %%%5.2f", no_loses[0], comp_loses, no_loses[1], player2_wins);
 
-    mvwprintw(stats_win, 5, 0,  "      ------------------ ------------------ ");
-    mvwprintw(stats_win, 6, 0,  "     |  You won         | %3i              |", no_wins[1]);
-    mvwprintw(stats_win, 7, 0,  "      ------------------ ------------------ ");
-    mvwprintw(stats_win, 8, 0,  "     |  The engine won  | %3i              |", no_loses[1]);
-    mvwprintw(stats_win, 9, 0,  "      ------------------ ------------------ ");
-
-    mvwprintw(stats_win, 12, 0, "      -> %3i TWO PLAYER GAMES",   no_games[2]);
-
-    mvwprintw(stats_win, 13, 0, "      ------------------ ------------------ ");
-    mvwprintw(stats_win, 14, 0, "     |  Player 1 won    | %3i              |", no_wins[0]);
-    mvwprintw(stats_win, 15, 0, "      ------------------ ------------------ ");
-    mvwprintw(stats_win, 16, 0, "     |  Player 2 won    | %3i              |", no_loses[0]);
-    mvwprintw(stats_win, 17, 0, "      ------------------ ------------------ ");
-
-    mvwprintw(stats_win, 19, 0, "         PRESS ANY KEY TO RETURN TO GAME");
+    mvwprintw(stats_win, rows - 1, (cols - 23) / 2, "PRESS ANY KEY TO RETURN");
 
     wrefresh(stats_win);
-    getch();
+    if (getch() == KEY_RESIZE)
+    {
+        adjust_windows();
+    }
 
     wclear(stats_win);
     wrefresh(stats_win);
@@ -661,7 +678,7 @@ void print_end_msg(int who_won)
     else if (which_mode == HUMAN_MODE)
     {
         // Find winner 
-        char *winner = (who_won == -1) ? "PLAYER 1" : "PLAYER 2";
+        char *winner = (who_won == 1) ? "PLAYER 1" : "PLAYER 2";
 
         x1 = (cols - strlen(win_msg[0])) / 2;
         x2 = (cols - strlen(win_msg[1])) / 2;

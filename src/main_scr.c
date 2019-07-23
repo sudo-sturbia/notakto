@@ -14,7 +14,7 @@
 
 #define NO_BOARDS 3
 #define NO_MENU_CHOICES 7         // Number of menu choices
-#define NO_OPTIONS 2              // Number of options in opening prompts
+#define NO_OPTIONS 2              // Number of options in opening / closing prompts
 
 #define CHOICE_BUTTON_SIZE 27
 
@@ -33,7 +33,8 @@ int boards[NO_BOARDS][3][3];
 // Determine if a board is dead -> 1: dead, 0: not
 int dead_boards[NO_BOARDS];
 
-// Number of games played by user + no. of wins & no. of loses (2 user games, engine games)
+// Number of games played by user + no. of wins & no. of loses
+// 0: engine games, 1: 2 player games
 int no_games[2];
 int no_wins[2];
 int no_loses[2];
@@ -72,7 +73,7 @@ int navigate(int ch, int *which_pr);
 
 void print_options(WINDOW *which_win, char *prompt, char *highlighted[], char *not_highlighted[], int which);
 
-// Play games -> both modes 
+// Initialize game
 void init_game()
 {
     // Create windows needed in game
@@ -138,7 +139,7 @@ int play_two_user()
 {
     // Set turn & increase no. of games
     int turn = 1;
-    no_games[0]++;
+    no_games[1]++;
 
     // Display initial state of windows
     print_boards(-1, -1);
@@ -542,7 +543,11 @@ void initial_msg()
     mvwprintw(main_win, y, x, "%s", start_msg);
 
     wrefresh(main_win);
-    getch();
+    if (getch() == KEY_RESIZE)
+    {
+        adjust_windows();
+    }
+
     wclear(main_win);
 }
 
@@ -679,6 +684,10 @@ int navigate(int ch, int *which_pr)
                 *which_pr = which;
                 return 1;
             }
+        // Terminal was resized
+        case KEY_RESIZE:
+            adjust_windows();
+            break;
         // Invalid key
         default:
             print_error(2);
