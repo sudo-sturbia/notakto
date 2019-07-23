@@ -121,7 +121,7 @@ int create_windows()
 
         // Create error window -> inside main window
         height = 3;
-        width = 25;
+        width = 27;
         y = rows - 9 - 4;
         x = (cols - 25) / 2;
 
@@ -696,7 +696,7 @@ void print_error(int error_num)
 {
     // Error messages
     char *tag = "Error: ";
-    char *error_msgs[] = {"invalid move", "no choice made", "invalid key", "invalid choice", "border"};
+    char *error_msgs[] = {"invalid move", "no choice made", "invalid key", "invalid choice", "border", "aleardy at oldest change", "already at newest change"};
 
     // Get window size & printing position
     int rows, cols, y, x;
@@ -719,6 +719,7 @@ void print_error(int error_num)
         getmaxyx(error_win, rows, cols);
 
         x = (cols - strlen(error_msgs[error_num])) / 2;
+        x = (x >= 0) ? x : 0;
         y = 1;
 
         // Clear error window

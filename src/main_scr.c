@@ -104,6 +104,9 @@ void init_game()
     // Play games until user quits
     for (;;)
     {
+        // Initialize undo & redo stacks
+        init_stacks();
+
         // Prompt user for mode
         which_mode = choose_mode();
     
@@ -131,6 +134,8 @@ void init_game()
         {
             break;
         }
+
+        clear_stacks();
     }
 }
 
@@ -192,8 +197,12 @@ int play_two_user()
                         break;
                     case CONTINUE:
                         break;
-/*                  case UNDO:
- *                  case REDO:*/
+                    case UNDO:
+                        undo();
+                        break;
+                    case REDO:
+                        redo();
+                        break;
                     case STATS:
                         print_stats(no_games, no_wins, no_loses);
                         break;
