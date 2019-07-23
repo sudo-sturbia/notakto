@@ -220,6 +220,9 @@ int play_two_user()
                 box(main_win, 0, 0);
                 wrefresh(main_win);
 
+                redrawwin(error_win);
+                wrefresh(error_win);
+
                 print_side_menu(BOARDS_WIN);
                 print_status(turn);
             }

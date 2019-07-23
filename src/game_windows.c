@@ -121,7 +121,7 @@ int create_windows()
 
         // Create error window -> inside main window
         height = 3;
-        width = 27;
+        width = 32;
         y = rows - 9 - 4;
         x = (cols - 25) / 2;
 
@@ -718,7 +718,7 @@ void print_error(int error_num)
     {
         getmaxyx(error_win, rows, cols);
 
-        x = (cols - strlen(error_msgs[error_num])) / 2;
+        x = (cols - strlen(error_msgs[error_num]) - strlen(tag)) / 2;
         x = (x >= 0) ? x : 0;
         y = 1;
 

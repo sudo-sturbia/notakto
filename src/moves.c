@@ -96,10 +96,7 @@ void mark_boards()
 {
     for (int i = 0; i < NO_BOARDS; i++)
     {
-        if (!dead_boards[i])
-        {
-            dead_boards[i] = is_dead(boards[i]);
-        }
+        dead_boards[i] = is_dead(boards[i]);
     }
 }
 
