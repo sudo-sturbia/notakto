@@ -179,11 +179,7 @@ void save_game(WINDOW *main_win)
     {
         return;
     }
-    else if (ch == KEY_RESIZE)
-    {
-        // If terminal is resized
-        adjust_windows();
-    }
+    is_resized(ch);
 
     // Open saving file
     FILE *game_file;
@@ -191,7 +187,9 @@ void save_game(WINDOW *main_win)
     
     if (game_file == NULL)
     {
-        print_error(7);
+        print_error(8, 1);
+        is_resized(getch());
+
         return;
     }
 
@@ -225,11 +223,7 @@ void save_game(WINDOW *main_win)
     mvwprintw(main_win, y, x, "%s", success);
     wrefresh(main_win);
 
-    if (getch() == KEY_RESIZE)
-    {
-        // If terminal was resized
-        adjust_windows();
-    }
+    is_resized(getch());
 }
 
 // Load previously saved game
@@ -242,7 +236,9 @@ int load_game()
     game_file = fopen("game.txt", "r");
     if (game_file == NULL)
     {
-        print_error(8);
+        print_error(9, 1);
+        is_resized(getch());
+
         return 0;
     }
 
@@ -255,7 +251,9 @@ int load_game()
     {
         if (ch != 1 && ch != 0)
         {
-            print_error(9);
+            print_error(10, 1);
+            is_resized(getch());
+
             return 0;
         }
 
@@ -264,7 +262,9 @@ int load_game()
 
     if (counter != no_chars)
     {
-        print_error(9);
+        print_error(10, 1);
+        is_resized(getch());
+
         return 0;
     }
 
@@ -353,7 +353,7 @@ void undo()
     // Empty undo stack
     if (undo_stack == NULL)
     {
-        print_error(5);
+        print_error(5, 0);
         return;
     }
 
@@ -373,7 +373,7 @@ void redo()
     // Empty redo stack
     if (redo_stack == NULL)
     {
-        print_error(6);
+        print_error(6, 0);
         return;
     }
 

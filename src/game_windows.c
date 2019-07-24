@@ -36,6 +36,7 @@ void clear_windows();
 void destroy_windows();
 
 void adjust_windows();
+void is_resized(int ch);
 
 void print_logo();
 void print_instructions();
@@ -47,7 +48,7 @@ void print_menu(int which);
 void print_status(int turn);
 void print_stats(int no_games[2], int no_wins[2], int no_loses[2]);
 void print_end_msg(int who_won);
-void print_error(int error_num);
+void print_error(int error_num, int which_win);
 
 // Create windows used in game
 // Returns 1: windows created, 0: otherwise
@@ -121,7 +122,7 @@ int create_windows()
 
         // Create error window -> inside main window
         height = 3;
-        width = 32;
+        width = 34;
         y = rows - 9 - 4;
         x = (cols - 25) / 2;
 
@@ -230,7 +231,7 @@ void adjust_windows()
         else
         {
             clear();
-            print_error(-1);
+            print_error(7, 1);
         }
     }while ((ch = getch()) == KEY_RESIZE);
 
@@ -240,6 +241,15 @@ void adjust_windows()
 
     print_logo();
     print_instructions();
+}
+
+// If resizing was detected
+void is_resized(int ch)
+{
+    if (ch == KEY_RESIZE)
+    {
+        adjust_windows();
+    }
 }
 
 /* Printing functions */
@@ -316,8 +326,8 @@ void print_instructions()
                             "- To quit:        q"};
 
     // Get window size & printing position
-    int win_rows, win_cols, x;
-    getmaxyx(instructions_win, win_rows, win_cols);
+    int win_cols, x;
+    win_cols = getmaxx(instructions_win);
 
     x = win_cols / 8;
     x = (x > 0) ? x : 1;           // x must be higher than 0
@@ -349,10 +359,6 @@ void print_side_menu(int which_win)
     // Clear window & print borders
     wclear(side_menu_win);
     box(side_menu_win, 0, 0);
-
-    // Get screen size
-    int rows, cols;
-    getmaxyx(side_menu_win, rows, cols);
 
     // Print tag
     mvwprintw(side_menu_win, 0, 1, "%s", tag);
@@ -623,11 +629,8 @@ void print_stats(int no_games[2], int no_wins[2], int no_loses[2])
     mvwprintw(stats_win, rows - 1, (cols - 23) / 2, "PRESS ANY KEY TO RETURN");
 
     wrefresh(stats_win);
-    if (getch() == KEY_RESIZE)
-    {
-        adjust_windows();
-    }
 
+    is_resized(getch());
     wclear(stats_win);
     wrefresh(stats_win);
 }
@@ -649,8 +652,8 @@ void print_end_msg(int who_won)
     wrefresh(main_win);
 
     // Get window size & printing position
-    int rows, cols, x1, x2;
-    getmaxyx(endgame_win, rows, cols);
+    int cols, x1, x2;
+    cols = getmaxx(endgame_win);
 
     // Computer mode 
     if (which_mode == COMPU_MODE)
@@ -691,38 +694,43 @@ void print_end_msg(int who_won)
 }
 
 // Print error messages
-// if error_num = -1 -> print size error
-void print_error(int error_num)
+// which_win: indicates where to print error message -> 1: main_win, 0: error_win
+void print_error(int error_num, int which_win)
 {
     // Error messages
     char *tag = "Error: ";
-    char *error_msgs[] = {"invalid move",
-                          "no choice made",
-                          "invalid key", 
-                          "invalid choice", 
-                          "border", 
-                          "aleardy at oldest change", 
-                          "already at newest change", 
-                          "couldn't save game",
-                          "file doesn't exist",
-                          "loading failed"};
+    char *error_msgs[] = {"[dead board]",                       // 0
+                          "[move already played]",              // 1
+                          "[no choice]",                        // 2
+                          "[invalid key]",                      // 3 
+                          "[board border]",                     // 4
+                          "[aleardy at oldest change]",         // 5
+                          "[already at newest change]",         // 6
+                          "[Please increase terminal size]",    // 7
+                          "[couldn't save game]",               // 8
+                          "[file doesn't exist]",               // 9
+                          "[loading failed]"};                  // 10
 
     // Get window size & printing position
     int rows, cols, y, x;
 
-    // Print terminal size error in standard screen
-    if (error_num == -1)
+    // Print in main window
+    if (which_win)
     {
-        char *error_msg = "Terminal size too small. Please resize terminal";
+        getmaxyx(main_win, rows, cols);
 
-        getmaxyx(stdscr, rows, cols);
-        x = (cols - strlen(error_msg)) / 2;
-        x = (x >= 0) ? x : 0;                // X >= 0
+        x = (cols - strlen(error_msgs[error_num]) - strlen(tag)) / 2;
+        x = (x >= 0) ? x : 0;
         y = rows / 2;
-
-        mvprintw(y, x, "%s", error_msg);
-        refresh();
+        
+        // Print error
+        wclear(main_win);
+        box(main_win, 0, 0);
+        
+        mvwprintw(main_win, y, x, "%s%s", tag, error_msgs[error_num]);
+        wrefresh(main_win);
     }
+    // Print in error window
     else 
     {
         getmaxyx(error_win, rows, cols);
@@ -731,10 +739,8 @@ void print_error(int error_num)
         x = (x >= 0) ? x : 0;
         y = 1;
 
-        // Clear error window
+        // Print error
         wclear(error_win);
-
-        // Print error message
         mvwprintw(error_win, y, x, "%s%s", tag, error_msgs[error_num]);
         wrefresh(error_win);
     }

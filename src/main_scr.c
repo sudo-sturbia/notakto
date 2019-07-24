@@ -87,7 +87,7 @@ void init_game()
         else
         {
             clear();
-            print_error(-1);
+            print_error(7, 1);
         }
     }while ((ch = getch()) == KEY_RESIZE);
 
@@ -195,7 +195,14 @@ int play_two_user()
                 }
                 else
                 {
-                    print_error(0);
+                    if (dead_boards[x / 3])
+                    {
+                        print_error(0, 0);
+                    }
+                    else
+                    {
+                        print_error(1, 0);
+                    }
                 }
             }
             // If user made a menu choice
@@ -280,6 +287,7 @@ int play_compu()
 
     print_boards(-1, -1);
     print_side_menu(BOARDS_WIN);
+    print_status(turn);
 
     getch();
     return 0;
@@ -305,7 +313,7 @@ int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice, int turn)
             // Check for borders
             if (y < 0)
             {
-               print_error(4);
+               print_error(4, 0);
                y++;
             }
             break;
@@ -316,7 +324,7 @@ int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice, int turn)
             // Check for borders
             if (y > 2)
             {
-                print_error(4);
+                print_error(4, 0);
                 y--;
             }
             break;
@@ -327,7 +335,7 @@ int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice, int turn)
             // Check for borders
             if (x < 0)
             {
-                print_error(4);
+                print_error(4, 0);
                 x++;
             }
             break;
@@ -338,7 +346,7 @@ int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice, int turn)
             // Check for borders
             if (x > 8)
             {
-                print_error(4);
+                print_error(4, 0);
                 x--;
             }
             break;
@@ -356,7 +364,7 @@ int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice, int turn)
             // Check if number is valid
             if (x > 8 || x < 0 || y > 2 || y < 0)
             {
-                print_error(3);
+                print_error(2, 0);
             }
             else
             {
@@ -379,7 +387,7 @@ int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice, int turn)
             break;
         // Invalid key
         default:
-            print_error(2);
+            print_error(3, 0);
     }
 
     // Re-set pointers
@@ -443,7 +451,7 @@ int use_menu()
                 // Check choice
                 if (which < 0 || which > NO_MENU_CHOICES - 1)
                 {
-                    print_error(1);
+                    print_error(2, 0);
                 }
                 else
                 {
@@ -459,7 +467,7 @@ int use_menu()
                 break;
             // Invalid key
             default:
-                print_error(2);
+                print_error(3, 0);
         }
 
         // Print menu
@@ -527,7 +535,7 @@ int use_side_menu(int which_win, int turn)
                 break;
             // Invalid key
             default:
-                print_error(2);
+                print_error(3, 0);
         }
         
         // Print choices
@@ -569,10 +577,7 @@ void initial_msg()
     mvwprintw(main_win, y, x, "%s", start_msg);
 
     wrefresh(main_win);
-    if (getch() == KEY_RESIZE)
-    {
-        adjust_windows();
-    }
+    is_resized(getch());
 
     wclear(main_win);
 }
@@ -735,20 +740,21 @@ int navigate(int ch, int *which_pr)
         case 10:
             if (!which)
             {
-                print_error(1);
+                print_error(2, 0);
             }
             else
             {
                 *which_pr = which;
                 return 1;
             }
+            break;
         // Terminal was resized
         case KEY_RESIZE:
             adjust_windows();
             break;
         // Invalid key
         default:
-            print_error(2);
+            print_error(3, 0);
     }
 
     // Re-set pointer
