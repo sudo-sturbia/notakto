@@ -65,6 +65,7 @@ void fill_boards();
 
 void initial_msg();
 
+int new_or_load();
 int choose_mode();
 int playing_order();
 int play_again(int who_won);
@@ -107,16 +108,27 @@ void init_game()
         // Initialize undo & redo stacks
         init_stacks();
 
+        // New or previous game
+        if (new_or_load())
+        {
+            // Game loaded succenfully
+            if (load_game())
+            {
+                goto loaded;
+            }
+        }
+
         // Prompt user for mode
         which_mode = choose_mode();
-    
+
+        // Fill boards with 0
+        fill_boards();
+   
+        loaded:
         // Clear main window & redraw borders
         wclear(main_win);
         box(main_win, 0, 0);
         wrefresh(main_win);
-
-        // Fill boards with 0
-        fill_boards();
 
         int who_won;
 
@@ -565,8 +577,40 @@ void initial_msg()
     wclear(main_win);
 }
 
-// Prompt user to start game or display game guide
-// Returns 1: start, 0: guide
+// Prompt for a new game
+// Returns 1: load previous game, 0: new game
+int new_or_load()
+{
+    char *choose[] =             {"|      Start new game     |", "|    Load previous game   |"};
+    char *choose_highlighted[] = {"/      Start new game     /", "/    Load previous game   /"};
+
+    // Print initial state of choices
+    box(main_win, 0, 0);
+    print_options(main_win, "", choose_highlighted, choose, 0);
+    wrefresh(main_win);
+
+    // Take user choice
+    int ch, which;
+    which = 0;
+    while ((ch = getch()) != 'q')
+    {
+        // Check if user made a choice
+        if (navigate(ch, &which))
+        {
+            return which - 1;
+        }
+
+        // Print choices with highlighting
+        box(main_win, 0, 0);
+        print_options(main_win, "", choose_highlighted, choose, which);
+
+        redrawwin(error_win);
+        wrefresh(error_win);
+    }
+}
+
+// Prompt user for playing mode  
+// Returns 1: against computer, 0: two player game
 int choose_mode()
 {
     char *prompt = "Choose a playing mode";

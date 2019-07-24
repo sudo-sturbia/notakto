@@ -696,8 +696,16 @@ void print_error(int error_num)
 {
     // Error messages
     char *tag = "Error: ";
-    char *error_msgs[] = {"invalid move", "no choice made", "invalid key", "invalid choice",
-                          "border", "aleardy at oldest change", "already at newest change", "couldn't save game"};
+    char *error_msgs[] = {"invalid move",
+                          "no choice made",
+                          "invalid key", 
+                          "invalid choice", 
+                          "border", 
+                          "aleardy at oldest change", 
+                          "already at newest change", 
+                          "couldn't save game",
+                          "file doesn't exist",
+                          "loading failed"};
 
     // Get window size & printing position
     int rows, cols, y, x;

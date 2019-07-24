@@ -16,6 +16,7 @@ void fill_boards();
 
 void initial_msg();
 
+int new_or_load();
 int choose_mode();
 int playing_order();
 int play_again(int who_won);

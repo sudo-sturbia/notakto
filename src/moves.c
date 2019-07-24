@@ -20,6 +20,7 @@ node *redo_stack;
 
 extern int boards[NO_BOARDS][3][3];
 extern int dead_boards[NO_BOARDS];
+extern int which_mode;
 
 /* FUNCTIONS */
 void play_move(int x, int y);
@@ -31,6 +32,7 @@ void mark_boards();
 int is_dead(int board[3][3]);
 
 void save_game();
+int load_game();
 
 node *create_node(int value[NO_BOARDS][3][3], node *next);
 
@@ -194,21 +196,21 @@ void save_game(WINDOW *main_win)
     }
 
     // Save game data
+    fputc(which_mode, game_file);
+
     for (int i = 0; i < 3; i++)
     {
         for (int j = 0; j < 3; j++)
         {
             for (int k = 0; k < 3; k++)
             {
-                char ch = (boards[i][j][k] == 1) ? '1' : '0';
-                fputc(ch, game_file);
+                fputc(boards[i][j][k], game_file);
             }
         }
     }
 
     for (int i = 0; i < 3; i++)
     {
-        char ch = (dead_boards[i] == 1) ? '1' : '0';
         fputc(dead_boards[i], game_file);
     }
 
@@ -228,6 +230,68 @@ void save_game(WINDOW *main_win)
         // If terminal was resized
         adjust_windows();
     }
+}
+
+// Load previously saved game
+// Returns 1: loaded correctly, 0: otherwise
+int load_game()
+{
+    // Open file
+    FILE *game_file;
+
+    game_file = fopen("game.txt", "r");
+    if (game_file == NULL)
+    {
+        print_error(8);
+        return 0;
+    }
+
+    // Checking file
+    int ch, counter, no_chars;
+    counter = 0;
+    no_chars = 3 * 3 * 3 + 3 + 1;
+
+    while ((ch = fgetc(game_file)) != EOF)
+    {
+        if (ch != 1 && ch != 0)
+        {
+            print_error(9);
+            return 0;
+        }
+
+        counter++;
+    }
+
+    if (counter != no_chars)
+    {
+        print_error(9);
+        return 0;
+    }
+
+    // Get game data
+    fseek(game_file, 0, SEEK_SET);
+
+    which_mode = fgetc(game_file);
+
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            for (int k = 0; k < 3; k++)
+            {
+                boards[i][j][k] = fgetc(game_file); 
+            }
+        }
+    }
+
+    for (int i = 0; i < 3; i++)
+    {
+        dead_boards[i] = fgetc(game_file);
+    }
+
+    fclose(game_file);
+
+    return 1;
 }
 
 /* UNDO & REDO */
