@@ -100,6 +100,8 @@ void init_game()
     print_logo();
     print_instructions();
 
+    fill_boards();
+
     initial_msg();
 
     // Play games until user quits
@@ -109,17 +111,27 @@ void init_game()
         init_stacks();
 
         // New or previous game
-        if (new_or_load())
+        switch(new_or_load())
         {
-            // Game loaded succenfully
-            if (load_game())
-            {
-                goto loaded;
-            }
+            // Game loaded succesfully
+            case 1:
+                if (load_game())
+                {
+                    goto loaded;
+                }
+                break;
+            case QUIT:
+                goto quit;
+                break;
         }
 
         // Prompt user for mode
         which_mode = choose_mode();
+
+        if (which_mode == QUIT)
+        {
+            break;
+        }
 
         // Fill boards with 0
         fill_boards();
@@ -149,6 +161,9 @@ void init_game()
 
         clear_stacks();
     }
+
+quit:
+    return;
 }
 
 // Two user game -> return winner
@@ -226,7 +241,7 @@ int play_two_user()
                         print_stats(no_games, no_wins, no_loses);
                         break;
                     case SAVE:
-                        save_game(main_win);
+                        save_game();
                         break;
                     case QUIT:
                         return 0;
@@ -352,11 +367,14 @@ int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice, int turn)
             break;
         // Use side menu
         case 's':
-            if (use_side_menu(BOARDS_WIN, turn) == MENU_WIN)
+            switch (use_side_menu(BOARDS_WIN, turn))
             {
-                // Take user choice
-                *menu_choice = use_menu();
-                return 0;
+                case MENU_WIN:
+                    *menu_choice = use_menu();
+                    return 0;
+                case QUIT:
+                    *menu_choice = QUIT;
+                    return 0;
             }
             break;
         // User made a choice -> enter
@@ -441,9 +459,12 @@ int use_menu()
                 break;
             // Use side menu
             case 's':
-                if (use_side_menu(MENU_WIN, 0) == BOARDS_WIN)
+                switch (use_side_menu(MENU_WIN, 0))
                 {
-                    return CONTINUE;
+                    case BOARDS_WIN:
+                        return CONTINUE;
+                    case QUIT:
+                        return QUIT;
                 }
                 break;
             // Enter key
@@ -474,11 +495,8 @@ int use_menu()
         print_menu(which);
     }
 
-    // Check if user quit
-    if (ch == 'q')
-    {
-        return QUIT;
-    }
+    // If user quit
+    return QUIT;
 }
 
 // Use side menu -> choose shown window
@@ -541,6 +559,9 @@ int use_side_menu(int which_win, int turn)
         // Print choices
         print_side_menu(navigate);
     }
+
+    // If user quit
+    return QUIT;
 }
 
 // Fill boards with 0
@@ -612,6 +633,9 @@ int new_or_load()
         redrawwin(error_win);
         wrefresh(error_win);
     }
+
+    // If user quit
+    return QUIT;
 }
 
 // Prompt user for playing mode  
@@ -646,6 +670,9 @@ int choose_mode()
         redrawwin(error_win);
         wrefresh(error_win);
     }
+
+    // If user quit
+    return QUIT;
 }
 
 // Prompt user for playing order -> used in computer mode
@@ -679,6 +706,9 @@ int playing_order()
         redrawwin(error_win);
         wrefresh(error_win);
     }
+
+    // If user quit
+    return QUIT;
 }
 
 // Prompt user for another game & print game ending message
@@ -709,6 +739,9 @@ int play_again(int who_won)
         // Print choices with highlighting
         print_options(endgame_win, prompt, choices_highlighted, choices, which);
     }
+
+    // If user quit
+    return 1;
 }
 
 // Navigate between choices & highlight choice

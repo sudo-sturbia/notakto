@@ -231,7 +231,7 @@ void adjust_windows()
         else
         {
             clear();
-            print_error(7, 1);
+            print_error(7, 2);
         }
     }while ((ch = getch()) == KEY_RESIZE);
 
@@ -694,28 +694,28 @@ void print_end_msg(int who_won)
 }
 
 // Print error messages
-// which_win: indicates where to print error message -> 1: main_win, 0: error_win
+// which_win: indicates where to print error message -> 2: standard screen, 1: main_win, 0: error_win
 void print_error(int error_num, int which_win)
 {
     // Error messages
-    char *tag = "Error: ";
-    char *error_msgs[] = {"[dead board]",                       // 0
-                          "[move already played]",              // 1
-                          "[no choice]",                        // 2
-                          "[invalid key]",                      // 3 
-                          "[board border]",                     // 4
-                          "[aleardy at oldest change]",         // 5
-                          "[already at newest change]",         // 6
-                          "[Please increase terminal size]",    // 7
-                          "[couldn't save game]",               // 8
-                          "[file doesn't exist]",               // 9
-                          "[loading failed]"};                  // 10
+    char *tag = "[ Error: ";
+    char *error_msgs[] = {"dead board ]",                       // 0
+                          "move already played ]",              // 1
+                          "no choice ]",                        // 2
+                          "invalid key ]",                      // 3 
+                          "board border ]",                     // 4
+                          "aleardy at oldest change ]",         // 5
+                          "already at newest change ]",         // 6
+                          "Please increase terminal size ]",    // 7
+                          "couldn't save game ]",               // 8
+                          "file doesn't exist ]",               // 9
+                          "loading failed ]"};                  // 10
 
     // Get window size & printing position
     int rows, cols, y, x;
 
     // Print in main window
-    if (which_win)
+    if (which_win == 1)
     {
         getmaxyx(main_win, rows, cols);
 
@@ -731,7 +731,7 @@ void print_error(int error_num, int which_win)
         wrefresh(main_win);
     }
     // Print in error window
-    else 
+    else if (!which_win) 
     {
         getmaxyx(error_win, rows, cols);
 
@@ -743,6 +743,20 @@ void print_error(int error_num, int which_win)
         wclear(error_win);
         mvwprintw(error_win, y, x, "%s%s", tag, error_msgs[error_num]);
         wrefresh(error_win);
+    }
+    // Print in standard screen
+    else
+    {
+        getmaxyx(stdscr, rows, cols);
+
+        x = (cols - strlen(error_msgs[error_num]) - strlen(tag)) / 2;
+        x = (x >= 0) ? x : 0;
+        y = rows / 2;
+        
+        // Print error
+        clear();
+        mvprintw(y, x, "%s%s", tag, error_msgs[error_num]);
+        refresh();
     }
 }
 

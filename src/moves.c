@@ -21,6 +21,7 @@ node *redo_stack;
 extern int boards[NO_BOARDS][3][3];
 extern int dead_boards[NO_BOARDS];
 extern int which_mode;
+extern WINDOW *main_win;
 
 /* FUNCTIONS */
 void play_move(int x, int y);
@@ -149,7 +150,7 @@ int is_dead(int board[3][3])
 /* SAVE & LOAD GAMES */
 
 // Save current game
-void save_game(WINDOW *main_win)
+void save_game()
 {
     char *warning = "WARNING: saving this game overwrites any previously saved games.";
     char *prompt  = "Press a to abort, any other key to proceed";
@@ -173,10 +174,10 @@ void save_game(WINDOW *main_win)
     mvwprintw(main_win, y, x, "%s", prompt);
     wrefresh(main_win);
 
-    // User aborted saving
     ch = getch();
     if (ch == 'a')
     {
+        // User aborted saving
         return;
     }
     is_resized(ch);
@@ -217,8 +218,10 @@ void save_game(WINDOW *main_win)
     wclear(main_win);
     box(main_win, 0, 0);
 
+    getmaxyx(main_win, rows, cols);
+
     x = (cols - strlen(success)) / 2;
-    y -= 1;
+    y = rows / 2;
 
     mvwprintw(main_win, y, x, "%s", success);
     wrefresh(main_win);
