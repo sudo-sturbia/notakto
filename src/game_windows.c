@@ -1,5 +1,6 @@
 /* Windows used in game */
 #include <ncurses.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* DEFINITIONS */
@@ -34,6 +35,8 @@ extern int which_mode;
 int create_windows();
 void clear_windows();
 void destroy_windows();
+
+void exit_game(int code);
 
 void adjust_windows();
 void is_resized(int ch);
@@ -207,6 +210,14 @@ void destroy_windows()
     delwin(status_win);
 }
 
+// Exit game
+void exit_game(int code)
+{
+    destroy_windows();
+    endwin();
+    exit(code);
+}
+
 /* Deal with terminal resizing */
 // which_win -> indicates whether boards or menu is being displayed
 // x, y -> which choice to highlight 
@@ -233,7 +244,7 @@ void adjust_windows()
             clear();
             print_error(7, 2);
         }
-    }while ((ch = getch()) == KEY_RESIZE);
+    }while ((ch = getch()));
 
     // Re-print windows
     box(main_win, 0, 0);
@@ -243,7 +254,7 @@ void adjust_windows()
     print_instructions();
 }
 
-// If resizing was detected
+// Detect resizing 
 void is_resized(int ch)
 {
     if (ch == KEY_RESIZE)
@@ -317,13 +328,13 @@ void print_logo()
 void print_instructions()
 {
     char *instructions[] = {" INSTRUCTIONS:",
-                            "- To navigate:",
-                            "                   ^",
-                            "           < h  j  k  l >",
-                            "                v",
                             "\n",
-                            "- For side menu:  s",
-                            "- To quit:        q"};
+                            " to navigate         ^",
+                            "             < h  j  k  l >",
+                            "                  v",
+                            "\n",
+                            " for side menu    s",
+                            " to quit          q"};
 
     // Get window size & printing position
     int win_cols, x;
@@ -331,9 +342,6 @@ void print_instructions()
 
     x = win_cols / 8;
     x = (x > 0) ? x : 1;           // x must be higher than 0
-
-    // Print window tag
-    mvwprintw(instructions_win, 0, 1, "%s", instructions[0]);
 
     // Print instructions
     for (int i = 1; i <= 7; i++)
@@ -343,6 +351,9 @@ void print_instructions()
 
     // Print borders
     box(instructions_win, 0, 0);
+
+    // Print window tag
+    mvwprintw(instructions_win, 0, 1, "%s", instructions[0]);
 
     wrefresh(instructions_win);
 }
@@ -630,7 +641,14 @@ void print_stats(int no_games[2], int no_wins[2], int no_loses[2])
 
     wrefresh(stats_win);
 
-    is_resized(getch());
+    int ch = getch();
+    is_resized(ch);
+
+    if (ch == 'q')
+    {
+        exit_game(0);
+    }
+
     wclear(stats_win);
     wrefresh(stats_win);
 }

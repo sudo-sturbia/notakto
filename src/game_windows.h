@@ -9,6 +9,8 @@ void destroy_windows();
 void adjust_windows();
 void is_resized(int ch);
 
+void exit_game(int code);
+
 void print_logo();
 void print_instructions();
 
