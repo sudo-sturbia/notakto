@@ -2,14 +2,10 @@
 #include <ncurses.h>
 #include <string.h>
 
-/* Structure to hold boards & their corresponding values */
-typedef struct boardValue
-{
-    int board[3][3];
-    int value[2];
-}boardValue;
-
 /* DEFINITIONS */
+#define BOARD_VALUE  2
+#define POS_VALUE    6
+
 #define NO_BOARDS    3
 #define NO_ROTATIONS 8
 
@@ -27,6 +23,13 @@ typedef struct boardValue
 #define FOUR_X  15 
 #define FIVE_X  5
 #define SIX_X   1
+
+/* Structure to hold boards & their corresponding values */
+typedef struct boardValue
+{
+    int board[3][3];
+    int value[BOARD_VALUE];
+}boardValue;
 
 extern int boards[NO_BOARDS][3][3];
 extern int dead_boards[NO_BOARDS];
@@ -219,10 +222,124 @@ const boardValue X6[SIX_X] = {    {{{1, 1, 0},                     // Configurat
                                     {0, 1, 1}}, {A, 0}}   };
 
 /* FUNCTIONS */
+void find_pos_value(int pos[NO_BOARDS][3][3], int is_dead[3], int pos_value[POS_VALUE]);
+void find_board_value(int board[3][3], int is_dead, int value[BOARD_VALUE]);
+
 int compare();
 int compare_boards(int board1[3][3], int board2[3][3]);
 
 void rotate_board(int board[3][3], int rotations[NO_ROTATIONS][3][3]);
+
+// Find position value
+void find_pos_value(int pos[NO_BOARDS][3][3], int is_dead[3], int pos_value[POS_VALUE])
+{
+    int where = 0;
+    for (int i = 0; i < NO_BOARDS; i++)
+    {
+        // Find board value
+        int board_value[BOARD_VALUE];
+        find_board_value(pos[i], is_dead[i], board_value);
+
+        // Add board value to position value
+        for (int j = 0; j < BOARD_VALUE; j++)
+        {
+            pos_value[where++] = board_value[j];
+        }
+    }
+}
+
+// Compares board to configurations to find its value 
+void find_board_value(int board[3][3], int is_dead, int value[BOARD_VALUE])
+{
+    // Dead board
+    if (is_dead) 
+    {
+        value[0] = 1;
+        value[1] = 0;
+
+        return;
+    }
+
+    // Find number of Xs
+    int x_counter = 0;
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            x_counter += board[i][j];
+        }
+    }
+
+    // Compare to configurations
+    switch (x_counter)
+    {
+        case 0:
+            // Only one value
+            value[0] = X0[0].value[0];
+            value[1] = X0[0].value[1];
+            break;
+        case 1:
+            for (int i = 0; i < ONE_X; i++)
+            {
+                if (compare(board, X1[i]))
+                {
+                    value[0] = X1[i].value[0];
+                    value[1] = X1[i].value[1];
+                    break;
+                }
+            }
+            break;
+        case 2:
+            for (int i = 0; i < TWO_X; i++)
+            {
+                if (compare(board, X2[i]))
+                {
+                    value[0] = X2[i].value[0];
+                    value[1] = X2[i].value[1];
+                    break;
+                }
+            }
+            break;
+        case 3:
+            for (int i = 0; i < THREE_X; i++)
+            {
+                if (compare(board, X3[i]))
+                {
+                    value[0] = X3[i].value[0];
+                    value[1] = X3[i].value[1];
+                    break;
+                }
+            }
+            break;
+        case 4:
+            for (int i = 0; i < FOUR_X; i++)
+            {
+                if (compare(board, X4[i]))
+                {
+                    value[0] = X4[i].value[0];
+                    value[1] = X4[i].value[1];
+                    break;
+                }
+            }
+            break;
+        case 5:
+            for (int i = 0; i < FIVE_X; i++)
+            {
+                if (compare(board, X5[i]))
+                {
+                    value[0] = X5[i].value[0]; 
+                    value[1] = X5[i].value[1];
+                    break;
+                }
+            }
+            break;
+        case 6:
+            // Only one value
+            value[0] = X6[0].value[0];
+            value[1] = X6[0].value[1];
+            break;
+    }
+}
 
 // Compares board with a configuration
 // Returns 1: if the same, 0: otherwise
