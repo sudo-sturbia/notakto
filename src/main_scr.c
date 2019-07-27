@@ -2,6 +2,7 @@
 #include <ncurses.h>
 #include <string.h>
 
+#include "engine.h"
 #include "game_windows.h"
 #include "moves.h"
 
@@ -56,8 +57,9 @@ void init_game();
 int play_two_user();
 int play_compu();
 
-int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice, int turn);
+int get_user_move(int turn);
 
+int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice, int turn);
 int use_menu();
 int use_side_menu(int which_win, int turn);
 
@@ -145,8 +147,7 @@ void init_game()
             who_won = play_compu();
         }
 
-        // User quit or Game ended 
-        if (!who_won || (who_won != 2 && play_again(who_won)))
+        if (who_won != 2 && play_again(who_won))
         {
             break;
         }
@@ -175,96 +176,12 @@ int play_two_user()
 
         print_status(turn);
 
-        // Navigate through boards & take user input
-        int x, y, ch, menu_choice;
-        x = y = 0;
-        menu_choice = -1;
-        while ((ch = getch()) != 'q')
+        if (get_user_move(turn))
         {
-            // Clear error window 
-            wclear(error_win);
-            wrefresh(error_win);
-
-            redrawwin(status_win);
-            wrefresh(status_win);
-
-            // Check if user made a choice
-            if (navigate_boards(ch, &x, &y, &menu_choice, turn))
-            {
-                // Validate move
-                if (is_valid(x, y))
-                {
-                    // Play move 
-                    play_move(x, y);
-
-                    goto next_move;
-                }
-                else
-                {
-                    if (dead_boards[x / 3])
-                    {
-                        print_error(0, 0);
-                    }
-                    else
-                    {
-                        print_error(1, 0);
-                    }
-                }
-            }
-            // If user made a menu choice
-            else if (menu_choice != -1)
-            {
-                // Check choice
-                switch (menu_choice)
-                {
-                    case RESTART:
-                        return 2;
-                        break;
-                    case CONTINUE:
-                        break;
-                    case UNDO:
-                        undo();
-                        break;
-                    case REDO:
-                        redo();
-                        break;
-                    case STATS:
-                        print_stats(no_games, no_wins, no_loses);
-                        break;
-                    case SAVE:
-                        save_game();
-                        break;
-                    case QUIT:
-                        exit_game(0);
-                        break;
-                }
-
-                // Re-set menu choice
-                menu_choice = -1;
-
-                // Re-print boards
-                wclear(main_win);
-                box(main_win, 0, 0);
-                wrefresh(main_win);
-
-                redrawwin(error_win);
-                wrefresh(error_win);
-
-                print_side_menu(BOARDS_WIN);
-                print_status(turn);
-            }
-
-            // Print game boards
-            print_boards(x, y);
+            // Restart
+            return 2;
         }
-
-    next_move:
-        // Check if user quit game
-        if (ch == 'q')
-        {
-            exit_game(0);
-        }
-        
+       
         print_boards(-1 , -1);
         turn *= -1;
     }
@@ -275,16 +192,10 @@ int play_two_user()
 // Game against engine
 int play_compu()
 {
-    // Set turn & increase no. of games 
-    int turn = 1;
-    no_games[1]++;
-
-    // Choose playing order
-    if (playing_order())
-    {
-        // Engine plays 1st move
-        // ...
-    }
+    // Set turn & playing order
+    int turn = -1;
+    int order = playing_order();
+    no_games[0]++;
 
     // Display initial state of windows
     wclear(main_win);
@@ -293,11 +204,136 @@ int play_compu()
 
     print_boards(-1, -1);
     print_side_menu(BOARDS_WIN);
-    print_status(turn);
 
-    getch();
+    // Computer plays 1st move
+    if (order)
+    {
+        print_status(1);
+
+        choose_move();
+        print_boards(-1, -1);
+    }
+
+    while (!is_finished())
+    {
+        // Get user move
+        print_status(turn);
+        if (get_user_move(turn))
+        {
+            // Restart
+            return 2;
+        }
+
+        // If user won
+        if (is_finished())
+        {
+            return turn;
+        }
+
+        // Get engine move
+        print_status(turn * -1);
+        choose_move();
+
+        print_boards(-1, -1);
+    }
+
+    return turn * -1;
+}
+
+// Get & play user move
+// Returns 2: restart, 0: otherwise
+int get_user_move(int turn)
+{
+    // Navigate through boards & take user input
+    int x, y, ch, menu_choice;
+    x = y = 0;
+    menu_choice = -1;
+    while ((ch = getch()) != 'q')
+    {
+        // Clear error window 
+        wclear(error_win);
+        wrefresh(error_win);
+
+        redrawwin(status_win);
+        wrefresh(status_win);
+
+        // Check if user made a choice
+        if (navigate_boards(ch, &x, &y, &menu_choice, turn))
+        {
+            // Validate move
+            if (is_valid(x, y))
+            {
+                // Play move 
+                play_move(x, y);
+
+                goto next_move;
+            }
+            else
+            {
+                if (dead_boards[x / 3])
+                {
+                    print_error(0, 0);
+                }
+                else
+                {
+                    print_error(1, 0);
+                }
+            }
+        }
+        // If user made a menu choice
+        else if (menu_choice != -1)
+        {
+            // Check choice
+            switch (menu_choice)
+            {
+                case RESTART:
+                    return 2;
+                    break;
+                case CONTINUE:
+                    break;
+                case UNDO:
+                    undo();
+                    break;
+                case REDO:
+                    redo();
+                    break;
+                case STATS:
+                    print_stats(no_games, no_wins, no_loses);
+                    break;
+                case SAVE:
+                    save_game();
+                    break;
+                case QUIT:
+                    exit_game(0);
+                    break;
+            }
+
+            // Re-set menu choice
+            menu_choice = -1;
+
+            // Re-print boards
+            wclear(main_win);
+            box(main_win, 0, 0);
+            wrefresh(main_win);
+
+            redrawwin(error_win);
+            wrefresh(error_win);
+
+            print_side_menu(BOARDS_WIN);
+            print_status(turn);
+        }
+
+        // Print game boards
+        print_boards(x, y);
+    }
+
+next_move:
+    // Check if user quit game
+    if (ch == 'q')
+    {
+        exit_game(0);
+    }
     return 0;
-    // ...
 }
 
 // Navigate between boards
