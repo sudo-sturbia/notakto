@@ -262,6 +262,8 @@ void choose_move()
                         if (is_winning(pos_value))
                         {
                             found_move = 1;
+                            boards[i][j][k] = 1;
+
                             goto play_move;
                         }
                     }
@@ -271,12 +273,7 @@ void choose_move()
     }
 
 play_move:
-    if (found_move)
-    {
-        // Play move on original board
-        memcpy(boards, copy, sizeof(int) * 3 * 3);
-    }
-    else
+    if (!found_move)
     {
         // Play a random move
         srand(time(NULL));
