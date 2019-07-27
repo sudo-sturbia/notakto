@@ -1,6 +1,7 @@
 /* Engine used in computer mode */
-#include <ncurses.h>
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 /* DEFINITIONS */
 #define BOARD_VALUE  2
@@ -222,23 +223,139 @@ const boardValue X6[SIX_X] = {    {{{1, 1, 0},                     // Configurat
                                     {0, 1, 1}}, {A, 0}}   };
 
 /* FUNCTIONS */
-void find_pos_value(int pos[NO_BOARDS][3][3], int is_dead[3], int pos_value[POS_VALUE]);
-void find_board_value(int board[3][3], int is_dead, int value[BOARD_VALUE]);
+void choose_move();
+
+int is_winning(int pos_value[POS_VALUE]);
+void find_pos_value(int pos[NO_BOARDS][3][3], int pos_value[POS_VALUE]);
+void find_board_value(int board[3][3], int value[BOARD_VALUE]);
 
 int compare();
 int compare_boards(int board1[3][3], int board2[3][3]);
 
 void rotate_board(int board[3][3], int rotations[NO_ROTATIONS][3][3]);
 
+// Choose move to play
+void choose_move()
+{
+    int copy[NO_BOARDS][3][3];
+
+    // Try moves
+    int found_move = 0;
+    for (int i = 0; i < NO_BOARDS; i++)
+    {
+        if (!dead_boards[i])
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                for (int k = 0; k < 3; k++)
+                {
+                    if (!boards[i][j][k])
+                    {
+                        // Create copy of boards
+                        memcpy(copy, boards, sizeof(int) * NO_BOARDS * 3 * 3);
+
+                        // Play move & find position value
+                        int pos_value[POS_VALUE];
+                        copy[i][j][k] = 1;
+
+                        find_pos_value(copy, pos_value);
+                        if (is_winning(pos_value))
+                        {
+                            found_move = 1;
+                            goto play_move;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+play_move:
+    if (found_move)
+    {
+        // Play move on original board
+        memcpy(boards, copy, sizeof(int) * 3 * 3);
+    }
+    else
+    {
+        // Play a random move
+        srand(time(NULL));
+
+        int x, y, z;
+        do {
+            x = rand() % 3;
+            y = rand() % 3;
+            z = rand() % 3;
+
+            // Move not played
+            if (!boards[x][y][z])
+            {
+                boards[x][y][z] = 1;
+                found_move = 1;
+            }
+        }while (!found_move);
+    }
+}
+
+// Evaluate position value 
+// Returns 1: if winnning, 0: otherwise
+int is_winning(int pos_value[POS_VALUE])
+{
+    // Count each character 
+    int A_counter, B_counter, C_counter, D_counter;
+    A_counter = B_counter = C_counter = D_counter = 0;
+    
+    for (int i = 0; i < POS_VALUE; i++)
+    {
+        switch (pos_value[i])
+        {
+            case A:
+                A_counter++;
+                break;
+            case B:
+                B_counter++;
+                break;
+            case C:
+                C_counter++;
+                break;
+            case D:
+                D_counter++;
+                break;
+        }
+    }
+
+    // Check if value is winning
+    if (A_counter == 1 && !B_counter && !C_counter && !D_counter)
+    {
+        return 1;
+    }
+    else if (B_counter == 2 && !A_counter && !C_counter && !D_counter)
+    {
+        return 1;
+    }
+    else if (B_counter == 1 && C_counter == 1 && !A_counter && !D_counter)
+    {
+        return 1;
+    }
+    else if (C_counter == 2 && !A_counter && !B_counter && !D_counter)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
 // Find position value
-void find_pos_value(int pos[NO_BOARDS][3][3], int is_dead[3], int pos_value[POS_VALUE])
+void find_pos_value(int pos[NO_BOARDS][3][3], int pos_value[POS_VALUE])
 {
     int where = 0;
     for (int i = 0; i < NO_BOARDS; i++)
     {
         // Find board value
         int board_value[BOARD_VALUE];
-        find_board_value(pos[i], is_dead[i], board_value);
+        find_board_value(pos[i], board_value);
 
         // Add board value to position value
         for (int j = 0; j < BOARD_VALUE; j++)
@@ -249,17 +366,8 @@ void find_pos_value(int pos[NO_BOARDS][3][3], int is_dead[3], int pos_value[POS_
 }
 
 // Compares board to configurations to find its value 
-void find_board_value(int board[3][3], int is_dead, int value[BOARD_VALUE])
+void find_board_value(int board[3][3], int value[BOARD_VALUE])
 {
-    // Dead board
-    if (is_dead) 
-    {
-        value[0] = 1;
-        value[1] = 0;
-
-        return;
-    }
-
     // Find number of Xs
     int x_counter = 0;
     for (int i = 0; i < 3; i++)
@@ -277,7 +385,7 @@ void find_board_value(int board[3][3], int is_dead, int value[BOARD_VALUE])
             // Only one value
             value[0] = X0[0].value[0];
             value[1] = X0[0].value[1];
-            break;
+            return;
         case 1:
             for (int i = 0; i < ONE_X; i++)
             {
@@ -285,7 +393,7 @@ void find_board_value(int board[3][3], int is_dead, int value[BOARD_VALUE])
                 {
                     value[0] = X1[i].value[0];
                     value[1] = X1[i].value[1];
-                    break;
+                    return;
                 }
             }
             break;
@@ -296,7 +404,7 @@ void find_board_value(int board[3][3], int is_dead, int value[BOARD_VALUE])
                 {
                     value[0] = X2[i].value[0];
                     value[1] = X2[i].value[1];
-                    break;
+                    return;
                 }
             }
             break;
@@ -307,7 +415,7 @@ void find_board_value(int board[3][3], int is_dead, int value[BOARD_VALUE])
                 {
                     value[0] = X3[i].value[0];
                     value[1] = X3[i].value[1];
-                    break;
+                    return;
                 }
             }
             break;
@@ -318,7 +426,7 @@ void find_board_value(int board[3][3], int is_dead, int value[BOARD_VALUE])
                 {
                     value[0] = X4[i].value[0];
                     value[1] = X4[i].value[1];
-                    break;
+                    return;
                 }
             }
             break;
@@ -329,7 +437,7 @@ void find_board_value(int board[3][3], int is_dead, int value[BOARD_VALUE])
                 {
                     value[0] = X5[i].value[0]; 
                     value[1] = X5[i].value[1];
-                    break;
+                    return;
                 }
             }
             break;
@@ -337,8 +445,13 @@ void find_board_value(int board[3][3], int is_dead, int value[BOARD_VALUE])
             // Only one value
             value[0] = X6[0].value[0];
             value[1] = X6[0].value[1];
-            break;
+            return;
     }
+
+    // Dead board
+    value[0] = 1;
+    value[1] = 0;
+    return;
 }
 
 // Compares board with a configuration

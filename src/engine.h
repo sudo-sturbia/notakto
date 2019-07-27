@@ -11,8 +11,11 @@
 typedef struct boardValue boardValue;
 
 /* FUNCTIONS */
-void find_pos_value(int pos[NO_BOARDS][3][3], int is_dead[3], int pos_value[POS_VALUE]);
-void find_board_value(int board[3][3], int is_dead, int value[BOARD_VALUE]);
+void choose_move();
+
+int is_winning(int pos_value[POS_VALUE]);
+void find_pos_value(int pos[NO_BOARDS][3][3], int pos_value[POS_VALUE]);
+void find_board_value(int board[3][3], int value[BOARD_VALUE]);
 
 int compare();
 int compare_boards(int board1[3][3], int board2[3][3]);
