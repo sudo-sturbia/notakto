@@ -3,6 +3,8 @@
 #include <string.h>
 #include <time.h>
 
+#include "moves.h" 
+
 /* DEFINITIONS */
 #define BOARD_VALUE  2
 #define POS_VALUE    6
@@ -239,6 +241,10 @@ void choose_move()
 {
     int copy[NO_BOARDS][3][3];
 
+    int move_scores[27];            // Used to determine non-losing moves
+    int losing_counter = 0;
+    int non_losing_counter = 0;
+
     // Try moves
     int found_move = 0;
     for (int i = 0; i < NO_BOARDS; i++)
@@ -266,6 +272,18 @@ void choose_move()
 
                             goto play_move;
                         }
+                        else
+                        {
+                            int other_two_dead = ((i == 0) && dead_boards[1] && dead_boards[2]) || ((i == 1) && dead_boards[0] && dead_boards[2]) || ((i == 2) && dead_boards[0] && dead_boards[1]);
+                            if (other_two_dead && is_dead(copy[i]))
+                            {
+                                move_scores[26 - (losing_counter++)] = i * 9 + j * 3 + k;
+                            }
+                            else
+                            {
+                                move_scores[non_losing_counter++] = i * 9 + j * 3 + k;
+                            }
+                        }
                     }
                 }
             }
@@ -275,22 +293,28 @@ void choose_move()
 play_move:
     if (!found_move)
     {
-        // Play a random move
         srand(time(NULL));
+    
+        int x, y, z, rand_move, rand_choice;
 
-        int x, y, z;
-        do {
-            x = rand() % 3;
-            y = rand() % 3;
-            z = rand() % 3;
+        // Moves that don't lose the game
+        if (non_losing_counter)
+        {
+            rand_choice = rand() % non_losing_counter;
+            rand_move = move_scores[rand_choice];
+        }
+        // All moves lose the game
+        else
+        {
+            rand_choice = rand() % losing_counter;
+            rand_move = move_scores[26 - rand_choice];
+        }
 
-            // Move not played
-            if (!boards[x][y][z])
-            {
-                boards[x][y][z] = 1;
-                found_move = 1;
-            }
-        }while (!found_move);
+        x = rand_move / 9;
+        y = (rand_move - x * 9) / 3;
+        z = (rand_move - x * 9 - y * 3);
+
+        boards[x][y][z] = 1;
     }
 }
 
@@ -439,10 +463,13 @@ void find_board_value(int board[3][3], int value[BOARD_VALUE])
             }
             break;
         case 6:
-            // Only one value
-            value[0] = X6[0].value[0];
-            value[1] = X6[0].value[1];
-            return;
+            // Only one configuration 
+            if (compare(board, X6[0]))
+            {
+                value[0] = X6[0].value[0];
+                value[1] = X6[0].value[1];
+                return;
+            }
     }
 
     // Dead board
