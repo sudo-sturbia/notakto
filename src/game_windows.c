@@ -49,7 +49,7 @@ void print_boards(int x, int y);
 void print_board(int board[3][3], WINDOW *board_win);
 void print_menu(int which);
 void print_status(int turn);
-void print_stats(int no_games[2], int no_wins[2], int no_loses[2]);
+void print_stats(int engine_games[2], int two_user_games[2]);
 void print_end_msg(int who_won);
 void print_error(int error_num, int which_win);
 
@@ -141,7 +141,7 @@ int create_windows()
 
         // Create stats window -> inside main window
         height = 10;
-        width = 90;
+        width = 58;
         y = (rows - height - 9) / 2;
         x = (cols - width) / 2;
 
@@ -595,7 +595,7 @@ void print_status(int turn)
 }
 
 // Print game stats 
-void print_stats(int no_games[2], int no_wins[2], int no_loses[2])
+void print_stats(int engine_games[2], int two_user_games[2])
 {
     // Clear main window
     wclear(main_win);
@@ -603,41 +603,37 @@ void print_stats(int no_games[2], int no_wins[2], int no_loses[2])
     wrefresh(main_win);
 
     // Calculate percentages
-    float comp_wins, comp_loses, player1_wins, player2_wins;
-    if (no_games[0] != 0)
+    int t_engine_games, t_user_games;
+    float comp_wins, comp_loses, p1_wins, p2_wins;
+
+    comp_wins = comp_loses = p1_wins = p2_wins = 0;   
+
+    t_engine_games = engine_games[0] + engine_games[1];
+    t_user_games = two_user_games[0] + two_user_games[1];
+
+    if (t_engine_games)
     {
-        comp_wins = (no_wins[0] * 100.0) / no_games[0];
-        comp_loses = (no_loses[0] * 100.0) / no_games[0];
-    }
-    else
-    {
-        comp_wins = comp_loses = 0;
+        comp_wins  = (engine_games[0] * 100.0) / t_engine_games;
+        comp_loses = (engine_games[1] * 100.0) / t_engine_games;
     }
 
-    if (no_games[1] != 0)
+    if (t_user_games)
     {
-        player1_wins = (no_wins[1] * 100.0) / no_games[1];
-        player2_wins = (no_loses[1] * 100.0) / no_games[1];
-    }
-    else
-    {
-        player1_wins = player2_wins = 0;
+        p1_wins = (two_user_games[0] * 100.0) / t_user_games;
+        p2_wins = (two_user_games[1] * 100.0) / t_user_games;
     }
 
     // Print stats
-    int rows, cols;
-    rows = 10; 
-    cols = 90;
+    mvwprintw(stats_win, 0, 0, "| TOTAL GAMES      : %3i", t_user_games + t_engine_games);
+    mvwprintw(stats_win, 1, 0, " --------------------------------------------------------");
+    mvwprintw(stats_win, 2, 0, "| vs Computer      : %3i  | Wins          : %3i   | %%%2.2f", t_engine_games, engine_games[0], comp_wins );
+    mvwprintw(stats_win, 3, 0, "|                         | Loses         : %3i   | %%%2.2f"                , engine_games[1], comp_loses);
+    mvwprintw(stats_win, 4, 0, "|");
+    mvwprintw(stats_win, 5, 0, "| Two Player games : %3i  | Player 1 wins : %3i   | %%%2.2f", t_user_games, two_user_games[0], p1_wins);
+    mvwprintw(stats_win, 6, 0, "|                         | Player 2 wins : %3i   | %%%2.2f"              , two_user_games[1], p2_wins);
 
-    mvwprintw(stats_win, 1, 0, "| No. of games | %3i", no_games[0] + no_games[1]);
-
-    mvwprintw(stats_win, 3, 0, "| vs COMPUTER          |  %3i                  | TWO PLAYER           | %3i", no_games[0], no_games[1]);
-    mvwprintw(stats_win, 4, 0, "| No. of wins                                  | PLAYER 1 wins ");
-    mvwprintw(stats_win, 5, 0, " --------------->  %3i | percentage: %%%5.2f     --------------->  %3i | percentage: %%%5.2f", no_wins[0], comp_wins, no_wins[1], player1_wins);
-    mvwprintw(stats_win, 6, 0, "| No. of loses                                 | PLAYER 2 wins ");
-    mvwprintw(stats_win, 7, 0, " --------------->  %3i | percentage: %%%5.2f     --------------->  %3i | percentage: %%%5.2f", no_loses[0], comp_loses, no_loses[1], player2_wins);
-
-    mvwprintw(stats_win, rows - 1, (cols - 23) / 2, "PRESS ANY KEY TO RETURN");
+    char *prompt = "PRESS ANY KEY TO RETURN";
+    mvwprintw(stats_win, 9, (58 - strlen(prompt)) / 2, "%s", prompt);
 
     wrefresh(stats_win);
 

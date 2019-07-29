@@ -190,6 +190,16 @@ int play_two_user(int loaded)
         turn *= -1;
     }
 
+    // Update number of games
+    if (turn == 1)
+    {
+        two_user_games[0]++;
+    }
+    else if (turn == -1)
+    {
+        two_user_games[1]++;
+    }
+
     return turn;
 }
 
@@ -243,6 +253,16 @@ int play_compu(int loaded)
 
         turn *= -1;
         print_boards(-1, -1);
+    }
+
+    // Update number of games
+    if (turn == 1)
+    {
+        engine_games[0]++;
+    }
+    else if (turn == -1)
+    {
+        engine_games[1]++;
     }
 
     return turn;
@@ -306,7 +326,7 @@ int get_user_move()
                     redo();
                     break;
                 case STATS:
-                    print_stats();
+                    print_stats(engine_games, two_user_games);
                     break;
                 case SAVE:
                     save_game();
