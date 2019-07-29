@@ -213,9 +213,44 @@ void destroy_windows()
 // Exit game
 void exit_game(int code)
 {
-    destroy_windows();
-    endwin();
-    exit(code);
+    // Create a window to print exit message
+    WINDOW *exit_win;
+    char *sure[] = {"Are you sure?",
+                    "Press q to exit, Any other key to return."};
+
+    int ch, width, height, y, x, cols, rows;
+
+    getmaxyx(stdscr, rows, cols);
+
+    height = 5;
+    width = 45; 
+    y = (rows - 15) / 2; 
+    x = (cols - 45) / 2;
+
+    exit_win = newwin(height, width, y, x);
+
+    box(exit_win, 0, 0);
+    mvwprintw(exit_win, 1, (width - strlen(sure[0])) / 2, "%s", sure[0]);
+    mvwprintw(exit_win, 3, (width - strlen(sure[1])) / 2, "%s", sure[1]);
+    wrefresh(exit_win);
+
+    ch = getch();
+
+    if (ch == 'q')
+    {
+        delwin(exit_win);
+        destroy_windows();
+        endwin();
+        exit(code);
+    }
+    else 
+    {
+        wclear(exit_win);
+        wrefresh(exit_win);
+        delwin(exit_win);
+
+        return;
+    }
 }
 
 /* Deal with terminal resizing */

@@ -6,10 +6,10 @@ int create_windows();
 void clear_windows();
 void destroy_windows();
 
+void exit_game(int code);
+
 void adjust_windows();
 void is_resized(int ch);
-
-void exit_game(int code);
 
 void print_logo();
 void print_instructions();

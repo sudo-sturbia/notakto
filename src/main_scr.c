@@ -276,7 +276,7 @@ int get_user_move()
     int x, y, ch, menu_choice;
     x = y = 0;
     menu_choice = -1;
-    while ((ch = getch()) != 'q')
+    while ((ch = getch()))
     {
         // Clear error window 
         wclear(error_win);
@@ -356,11 +356,6 @@ int get_user_move()
     }
 
 next_move:
-    // Check if user quit game
-    if (ch == 'q')
-    {
-        exit_game(0);
-    }
     return 0;
 }
 
@@ -428,6 +423,10 @@ int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice)
                 return 0;
             }
             break;
+        // User quit
+        case 'q':
+            exit_game(0);
+            break;
         // User made a choice -> enter
         case 10:
             // Check if number is valid
@@ -483,7 +482,7 @@ int use_menu()
     int ch, which;
     which = -1;
 
-    while ((ch = getch()) != 'q')
+    while ((ch = getch()))
     {
         wclear(error_win);
         wrefresh(error_win);
@@ -518,6 +517,10 @@ int use_menu()
                         return QUIT;
                 }
                 break;
+            // User quit
+            case 'q':
+                exit_game(0);
+                break;
             // Enter key
             case 10:
                 // Check choice
@@ -546,8 +549,6 @@ int use_menu()
         print_menu(which);
     }
 
-    // If user quit
-    exit_game(0);
     return 0;
 }
 
@@ -558,7 +559,7 @@ int use_side_menu(int which_win)
 
     // Navigate through choices & take user choice
     int ch;
-    while ((ch = getch()) != 'q')
+    while ((ch = getch()))
     {
         wclear(side_menu_win);
         wclear(error_win);
@@ -582,6 +583,21 @@ int use_side_menu(int which_win)
                 if (navigate > 1)
                 {
                     navigate--;
+                }
+                break;
+            // User quit
+            case 'q':
+                exit_game(0);
+
+                // Re-print windows
+                if (which_win == BOARDS_WIN)
+                {
+                    print_boards(-1, -1);
+                    print_status(turn);
+                }
+                else if (which_win == MENU_WIN)
+                {
+                    print_menu(-1);
                 }
                 break;
             // Enter key -> user made a choice
@@ -612,8 +628,6 @@ int use_side_menu(int which_win)
         print_side_menu(navigate);
     }
 
-    // If user quit
-    exit_game(0);
     return 0;
 }
 
@@ -651,7 +665,14 @@ void initial_msg()
     mvwprintw(main_win, y, x, "%s", start_msg);
 
     wrefresh(main_win);
-    is_resized(getch());
+
+    int ch = getch();
+
+    is_resized(ch);
+    if (ch == 'q')
+    {
+        exit_game(0);
+    }
 
     wclear(main_win);
 }
@@ -671,7 +692,7 @@ int new_or_load()
     // Take user choice
     int ch, which;
     which = 0;
-    while ((ch = getch()) != 'q')
+    while ((ch = getch()))
     {
         // Check if user made a choice
         if (navigate(ch, &which))
@@ -687,8 +708,6 @@ int new_or_load()
         wrefresh(error_win);
     }
 
-    // If user quit
-    exit_game(0);
     return 0;
 }
 
@@ -708,7 +727,7 @@ int choose_mode()
     // Take user choice
     int ch, which;
     which = 0;
-    while ((ch = getch()) != 'q')
+    while ((ch = getch()))
     {
         // Check if user made a choice
         if (navigate(ch, &which))
@@ -725,8 +744,6 @@ int choose_mode()
         wrefresh(error_win);
     }
 
-    // If user quit
-    exit_game(0);
     return 0;
 }
 
@@ -745,7 +762,7 @@ int playing_order()
     // Take user choice
     int ch, which;
     which = 0;
-    while ((ch = getch()) != 'q')
+    while ((ch = getch()))
     {
         // Check if user made a choice
         if (navigate(ch, &which))
@@ -762,8 +779,6 @@ int playing_order()
         wrefresh(error_win);
     }
 
-    // If user quit
-    exit_game(0);
     return 0;
 }
 
@@ -784,7 +799,7 @@ int play_again(int who_won)
     // Take user choice
     int ch, which;
     which = 0;
-    while ((ch = getch()) != 'q')
+    while ((ch = getch()))
     {
         // Check if user made a choice
         if (navigate(ch, &which))
@@ -796,8 +811,6 @@ int play_again(int who_won)
         print_options(endgame_win, prompt, choices_highlighted, choices, which);
     }
 
-    // If user quit
-    exit_game(0);
     return 0;
 }
 
@@ -825,6 +838,10 @@ int navigate(int ch, int *which_pr)
         case KEY_RIGHT:
         case 'l':
             which = 2;
+            break;
+        // User quit
+        case 'q':
+            exit_game(0);
             break;
         // Enter key -> made a choice
         case 10:
