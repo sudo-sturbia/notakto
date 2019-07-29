@@ -21,6 +21,7 @@ node *redo_stack;
 extern int boards[NO_BOARDS][3][3];
 extern int dead_boards[NO_BOARDS];
 extern int which_mode;
+extern int turn;
 extern WINDOW *main_win;
 
 /* FUNCTIONS */
@@ -213,6 +214,8 @@ void save_game()
         fputc(dead_boards[i], game_file);
     }
 
+    fputc(turn + 1, game_file);
+
     fclose(game_file);
     
     wclear(main_win);
@@ -248,19 +251,20 @@ int load_game()
     // Checking file
     int ch, counter, no_chars;
     counter = 0;
-    no_chars = 3 * 3 * 3 + 3 + 1;
+    no_chars = 3 * 3 * 3 + 3 + 1 + 1;
 
     while ((ch = fgetc(game_file)) != EOF)
     {
-        if (ch != 1 && ch != 0)
+        counter++;
+
+        if ((ch != 1 && ch != 0) && ((counter == no_chars) && ch != 0 && ch != 2))
         {
-            print_error(10, 1);
+            mvprintw(1, 1, "counter: %i, turn: %i", counter, ch);
+            refresh();
             is_resized(getch());
 
             return 0;
         }
-
-        counter++;
     }
 
     if (counter != no_chars)
@@ -291,6 +295,9 @@ int load_game()
     {
         dead_boards[i] = fgetc(game_file);
     }
+
+    turn = fgetc(game_file);
+    turn -= 1;
 
     fclose(game_file);
 

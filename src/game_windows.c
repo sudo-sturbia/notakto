@@ -125,7 +125,7 @@ int create_windows()
 
         // Create error window -> inside main window
         height = 3;
-        width = 34;
+        width = 35;
         y = rows - 9 - 4;
         x = (cols - 25) / 2;
 
@@ -329,9 +329,9 @@ void print_instructions()
 {
     char *instructions[] = {" INSTRUCTIONS:",
                             "\n",
-                            " to navigate         ^",
-                            "             < h  j  k  l >",
-                            "                  v",
+                            " to navigate        ^",
+                            "            < h  j  k  l >",
+                            "                 v",
                             "\n",
                             " for side menu    s",
                             " to quit          q"};
@@ -677,7 +677,7 @@ void print_end_msg(int who_won)
     if (which_mode == COMPU_MODE)
     {
         // User won
-        if (who_won == 1)
+        if (who_won == -1)
         {
             x1 = (cols - strlen(win_msg[0])) / 2;
             x2 = (cols - strlen(win_msg[2])) / 2;
@@ -686,7 +686,7 @@ void print_end_msg(int who_won)
             mvwprintw(endgame_win, 1, x2, "%s", win_msg[2]);
         }
         // Computer won
-        else if (who_won == -1)
+        else if (who_won == 1)
         {
             x1 = (cols - strlen(lose_msg[0])) / 2;
             x2 = (cols - strlen(lose_msg[1])) / 2;

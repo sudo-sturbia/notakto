@@ -35,12 +35,14 @@ int boards[NO_BOARDS][3][3];
 int dead_boards[NO_BOARDS];
 
 // Number of games played by user + no. of wins & no. of loses
-// 0: engine games, 1: 2 player games
-int no_games[2];
-int no_wins[2];
-int no_loses[2];
+int engine_games[2];          // 0: wins,      1: loses
+int two_user_games[2];        // 0: p 1 wins,  1: p 2 wins
 
 int which_mode;
+
+// turn =  1: computer or player 1
+//      = -1: User     or player 2
+int turn;
 
 extern WINDOW *main_win;
 extern WINDOW *boards_win[NO_BOARDS];
@@ -54,14 +56,14 @@ extern WINDOW *endgame_win;
 /* FUNCTIONS */
 void init_game();
 
-int play_two_user();
-int play_compu();
+int play_two_user(int loaded);
+int play_compu(int loaded);
 
-int get_user_move(int turn);
+int get_user_move();
 
-int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice, int turn);
+int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice);
 int use_menu();
-int use_side_menu(int which_win, int turn);
+int use_side_menu(int which_win);
 
 void fill_boards();
 
@@ -98,14 +100,12 @@ void init_game()
 
     for (int i = 0; i < 2; i++)
     {
-        no_games[i] = no_wins[i] = no_loses[i] = 0;
+        engine_games[i] = two_user_games[i] = 0;
     }
 
     // Display static windows
     print_logo();
     print_instructions();
-
-    fill_boards();
 
     initial_msg();
 
@@ -116,10 +116,12 @@ void init_game()
         init_stacks();
 
         // New or previous game
+        int game_loaded = 0;
         if (new_or_load())
         {
             if (load_game())
             {
+                game_loaded = 1;
                 goto loaded;
             }
         }
@@ -140,11 +142,11 @@ void init_game()
 
         if (which_mode == HUMAN_MODE)
         {
-            who_won = play_two_user();
+            who_won = play_two_user(game_loaded);
         }
         else if (which_mode == COMPU_MODE)
         {
-            who_won = play_compu();
+            who_won = play_compu(game_loaded);
         }
 
         if (who_won != 2 && play_again(who_won))
@@ -159,11 +161,13 @@ void init_game()
 }
 
 // Two user game -> return winner
-int play_two_user()
+int play_two_user(int loaded)
 {
     // Set turn & increase no. of games
-    int turn = 1;
-    no_games[1]++;
+    if (!loaded)
+    {
+        turn = 1;
+    }
 
     // Display initial state of windows
     print_boards(-1, -1);
@@ -176,7 +180,7 @@ int play_two_user()
 
         print_status(turn);
 
-        if (get_user_move(turn))
+        if (get_user_move())
         {
             // Restart
             return 2;
@@ -190,12 +194,16 @@ int play_two_user()
 }
 
 // Game against engine
-int play_compu()
+int play_compu(int loaded)
 {
     // Set turn & playing order
-    int turn = -1;
-    int order = playing_order();
-    no_games[0]++;
+    // If game is loaded -> always user's turn to play
+    turn = -1; 
+    int order = 0;
+    if (!loaded)
+    {
+        order = playing_order();
+    }
 
     // Display initial state of windows
     wclear(main_win);
@@ -205,7 +213,7 @@ int play_compu()
     print_boards(-1, -1);
     print_side_menu(BOARDS_WIN);
 
-    // Computer plays 1st move
+    // If computer plays 1st move
     if (order)
     {
         print_status(1);
@@ -216,33 +224,33 @@ int play_compu()
 
     while (!is_finished())
     {
-        // Get user move
         print_status(turn);
-        if (get_user_move(turn))
+
+        // User to play
+        if (turn == -1)
         {
-            // Restart
-            return 2;
+            if (get_user_move())
+            {
+                // Restart
+                return 2;
+            }
+        }
+        // Engine to play
+        else if (turn == 1)
+        {
+            choose_move();
         }
 
-        // If user won
-        if (is_finished())
-        {
-            return turn;
-        }
-
-        // Get engine move
-        print_status(turn * -1);
-        choose_move();
-
+        turn *= -1;
         print_boards(-1, -1);
     }
 
-    return turn * -1;
+    return turn;
 }
 
 // Get & play user move
 // Returns 2: restart, 0: otherwise
-int get_user_move(int turn)
+int get_user_move()
 {
     // Navigate through boards & take user input
     int x, y, ch, menu_choice;
@@ -258,7 +266,7 @@ int get_user_move(int turn)
         wrefresh(status_win);
 
         // Check if user made a choice
-        if (navigate_boards(ch, &x, &y, &menu_choice, turn))
+        if (navigate_boards(ch, &x, &y, &menu_choice))
         {
             // Validate move
             if (is_valid(x, y))
@@ -298,7 +306,7 @@ int get_user_move(int turn)
                     redo();
                     break;
                 case STATS:
-                    print_stats(no_games, no_wins, no_loses);
+                    print_stats();
                     break;
                 case SAVE:
                     save_game();
@@ -338,7 +346,7 @@ next_move:
 
 // Navigate between boards
 // Returns 1: if user made a choice, 0: otherwise
-int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice, int turn)
+int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice)
 {
     // Set variables for use inside function
     int x, y;
@@ -394,7 +402,7 @@ int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice, int turn)
             break;
         // Use side menu
         case 's':
-            if (use_side_menu(BOARDS_WIN, turn) == MENU_WIN)
+            if (use_side_menu(BOARDS_WIN) == MENU_WIN)
             {
                 *menu_choice = use_menu();
                 return 0;
@@ -482,7 +490,7 @@ int use_menu()
                 break;
             // Use side menu
             case 's':
-                switch (use_side_menu(MENU_WIN, 0))
+                switch (use_side_menu(MENU_WIN))
                 {
                     case BOARDS_WIN:
                         return CONTINUE;
@@ -524,7 +532,7 @@ int use_menu()
 }
 
 // Use side menu -> choose shown window
-int use_side_menu(int which_win, int turn)
+int use_side_menu(int which_win)
 {
     int navigate = which_win;
 

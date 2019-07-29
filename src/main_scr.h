@@ -4,14 +4,14 @@
 /* FUNCTIONS */
 void init_game();
 
-int play_two_user();
-int play_compu();
+int play_two_user(int loaded);
+int play_compu(int loaded);
 
-int get_user_move(int turn);
+int get_user_move();
 
-int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice, int turn);
+int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice);
 int use_menu();
-int use_side_menu(int which_win, int turn);
+int use_side_menu(int which_win);
 
 void fill_boards();
 
