@@ -9,7 +9,7 @@ void destroy_windows();
 void exit_game(int code);
 
 void adjust_windows();
-void is_resized(int ch);
+void resize_or_quit(int ch);
 
 void print_logo();
 void print_instructions();

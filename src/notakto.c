@@ -1,5 +1,6 @@
 /* Curses initialization & game start */
 #include <ncurses.h>
+
 #include "main_scr.h"
 
 int main(void)

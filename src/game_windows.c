@@ -39,7 +39,7 @@ void destroy_windows();
 void exit_game(int code);
 
 void adjust_windows();
-void is_resized(int ch);
+void resize_or_quit(int ch);
 
 void print_logo();
 void print_instructions();
@@ -224,7 +224,7 @@ void exit_game(int code)
 
     height = 5;
     width = 45; 
-    y = (rows - 15) / 2; 
+    y = (rows - height - 9) / 2; 
     x = (cols - 45) / 2;
 
     exit_win = newwin(height, width, y, x);
@@ -245,6 +245,8 @@ void exit_game(int code)
     }
     else 
     {
+        resize_or_quit(ch);   // Detects only resizing
+
         wclear(exit_win);
         wrefresh(exit_win);
         delwin(exit_win);
@@ -289,12 +291,16 @@ void adjust_windows()
     print_instructions();
 }
 
-// Detect resizing 
-void is_resized(int ch)
+// Detect resizing or quiting 
+void resize_or_quit(int ch)
 {
     if (ch == KEY_RESIZE)
     {
         adjust_windows();
+    }
+    else if (ch == 'q')
+    {
+        exit_game(0);
     }
 }
 
@@ -672,13 +678,7 @@ void print_stats(int engine_games[2], int two_user_games[2])
 
     wrefresh(stats_win);
 
-    int ch = getch();
-    is_resized(ch);
-
-    if (ch == 'q')
-    {
-        exit_game(0);
-    }
+    resize_or_quit(getch());
 
     wclear(stats_win);
     wrefresh(stats_win);

@@ -1,4 +1,4 @@
-/* Validate moves & undo / redo */
+/* Validate moves, save/load & undo/redo */
 #include <ncurses.h>
 #include <stdlib.h>
 #include <string.h>
@@ -181,7 +181,8 @@ void save_game()
         // User aborted saving
         return;
     }
-    is_resized(ch);
+
+    resize_or_quit(ch);
 
     // Open saving file
     FILE *game_file;
@@ -190,7 +191,7 @@ void save_game()
     if (game_file == NULL)
     {
         print_error(8, 1);
-        is_resized(getch());
+        resize_or_quit(getch());
 
         return;
     }
@@ -229,7 +230,7 @@ void save_game()
     mvwprintw(main_win, y, x, "%s", success);
     wrefresh(main_win);
 
-    is_resized(getch());
+    resize_or_quit(getch());
 }
 
 // Load previously saved game
@@ -243,7 +244,7 @@ int load_game()
     if (game_file == NULL)
     {
         print_error(9, 1);
-        is_resized(getch());
+        resize_or_quit(getch());
 
         return 0;
     }
@@ -259,9 +260,8 @@ int load_game()
 
         if ((ch != 1 && ch != 0) && ((counter == no_chars) && ch != 0 && ch != 2))
         {
-            mvprintw(1, 1, "counter: %i, turn: %i", counter, ch);
-            refresh();
-            is_resized(getch());
+            print_error(10, 1);
+            resize_or_quit(getch());
 
             return 0;
         }
@@ -270,7 +270,7 @@ int load_game()
     if (counter != no_chars)
     {
         print_error(10, 1);
-        is_resized(getch());
+        resize_or_quit(getch());
 
         return 0;
     }

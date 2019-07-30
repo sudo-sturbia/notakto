@@ -425,7 +425,7 @@ int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice)
             break;
         // User quit
         case 'q':
-            exit_game(0);
+            *menu_choice = QUIT;
             break;
         // User made a choice -> enter
         case 10:
@@ -666,13 +666,7 @@ void initial_msg()
 
     wrefresh(main_win);
 
-    int ch = getch();
-
-    is_resized(ch);
-    if (ch == 'q')
-    {
-        exit_game(0);
-    }
+    resize_or_quit(getch());
 
     wclear(main_win);
 }
