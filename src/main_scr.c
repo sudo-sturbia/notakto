@@ -14,10 +14,6 @@
 #define MENU_WIN   1 
 
 #define NO_BOARDS 3
-#define NO_MENU_CHOICES 7         // Number of menu choices
-#define NO_OPTIONS 2              // Number of options in opening / closing prompts
-
-#define CHOICE_BUTTON_SIZE 27
 
 // Menu choices
 #define RESTART  0
@@ -468,7 +464,9 @@ int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice)
 // Use menu & return user choice
 int use_menu()
 {
-    // Print menu on top of boards win
+    const int NO_MENU_CHOICES = 7;
+
+    // Print on top of boards win
     wclear(main_win);
     box(main_win, 0, 0);
     wrefresh(main_win);
@@ -654,11 +652,11 @@ void initial_msg()
     char *start_msg = "PRESS ANY KEY TO START";
 
     // Get screen size & printing position
-    int rows, cols, x, y;
-    getmaxyx(main_win, rows, cols);
+    int ROWS, COLS, x, y;
+    getmaxyx(main_win, ROWS, COLS);
 
-    y = rows / 2;
-    x = (cols - strlen(start_msg)) / 2;
+    y = ROWS / 2;
+    x = (COLS - strlen(start_msg)) / 2;
 
     // Print start message
     box(main_win, 0, 0);
@@ -867,19 +865,21 @@ int navigate(int ch, int *which_pr)
 // If which : 1 -> highlight 1st, 2 -> highlight 2nd, 0 -> no highlighting
 void print_options(WINDOW *which_win, char *prompt, char *highlighted[], char *not_highlighted[], int which)
 {
-    // Get window size &  printing position
-    int rows, cols, y, x;
-    getmaxyx(which_win, rows, cols);
+    const int NO_OPTIONS = 2;
+    const int CHOICE_BUTTON_SIZE = 27;
 
-    // Print prompt
-    x = (cols - strlen(prompt)) / 2;
-    y = (rows - 3) / 2;
+    // Get window size &  printing position
+    int ROWS, COLS, y, x;
+    getmaxyx(which_win, ROWS, COLS);
+
+    x = (COLS - strlen(prompt)) / 2;
+    y = (ROWS - 3) / 2;
 
     mvwprintw(which_win, y, x, "%s", prompt);
 
     // Print choices
-    y = rows / 2;
-    x = (cols - CHOICE_BUTTON_SIZE * NO_OPTIONS) / 2;
+    y = ROWS / 2;
+    x = (COLS - CHOICE_BUTTON_SIZE * NO_OPTIONS) / 2;
 
     // No highlighting
     if (!which)

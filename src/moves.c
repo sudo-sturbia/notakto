@@ -159,17 +159,17 @@ void save_game()
 
     // Print warning
     int ch;
-    int rows, cols, x, y;
-    getmaxyx(main_win, rows, cols);
+    int ROWS, COLS, x, y;
+    getmaxyx(main_win, ROWS, COLS);
 
-    x = (cols - strlen(warning)) / 2;
-    y = rows / 2;
+    x = (COLS - strlen(warning)) / 2;
+    y = ROWS / 2;
 
     wclear(main_win);
     box(main_win, 0, 0);
     mvwprintw(main_win, y, x, "%s", warning);
 
-    x = (cols - strlen(prompt)) / 2;
+    x = (COLS - strlen(prompt)) / 2;
     y += 1;
 
     mvwprintw(main_win, y, x, "%s", prompt);
@@ -222,10 +222,10 @@ void save_game()
     wclear(main_win);
     box(main_win, 0, 0);
 
-    getmaxyx(main_win, rows, cols);
+    getmaxyx(main_win, ROWS, COLS);
 
-    x = (cols - strlen(success)) / 2;
-    y = rows / 2;
+    x = (COLS - strlen(success)) / 2;
+    y = ROWS / 2;
 
     mvwprintw(main_win, y, x, "%s", success);
     wrefresh(main_win);

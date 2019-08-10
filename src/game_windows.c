@@ -4,9 +4,6 @@
 #include <string.h>
 
 /* DEFINITIONS */
-#define LOGO_WIDTH 62
-#define LOGO_HEIGHT 5
-
 #define HUMAN_MODE 0
 #define COMPU_MODE 1
 
@@ -14,7 +11,9 @@
 #define MENU_WIN   1 
 
 #define NO_BOARDS 3
-#define NO_MENU_CHOICES 7
+
+#define LOGO_WIDTH 62
+#define LOGO_HEIGHT 5
 
 /* WINDOWS */
 WINDOW *main_win;
@@ -58,15 +57,14 @@ void print_error(int error_num, int which_win);
 int create_windows()
 {
     // Minimum terminal size to play game
-    int m_width, m_height;
-    m_width  = 96;
-    m_height = 24;
+    const int M_WIDTH  = 96;
+    const int M_HEIGHT = 24;
 
     // Get screen size
     int rows, cols;
     getmaxyx(stdscr, rows, cols);
 
-    if (rows >= m_height && cols >= m_width)
+    if (rows >= M_HEIGHT && cols >= M_WIDTH)
     {
         // Variables to represent printing position & window size
         int x, y, height, width;
@@ -124,10 +122,10 @@ int create_windows()
         menu_win = newwin(height, width, y, x);
 
         // Create error window -> inside main window
-        height = 3;
+        height = 1;
         width = 35;
-        y = rows - 9 - 4;
-        x = (cols - 25) / 2;
+        y = rows - 9 - 2;
+        x = (cols - width) / 2;
 
         error_win = newwin(height, width, y, x);
 
@@ -218,20 +216,21 @@ void exit_game(int code)
     char *sure[] = {"Are you sure?",
                     "Press q to exit, Any other key to return."};
 
-    int ch, width, height, y, x, cols, rows;
+    int ch, y, x, COLS, ROWS;
 
-    getmaxyx(stdscr, rows, cols);
+    getmaxyx(stdscr, ROWS, COLS);
 
-    height = 5;
-    width = 45; 
-    y = (rows - height - 9) / 2; 
-    x = (cols - 45) / 2;
+    const int HEIGHT = 5;
+    const int WIDTH  = 45; 
 
-    exit_win = newwin(height, width, y, x);
+    y = (ROWS - HEIGHT - 9) / 2; 
+    x = (COLS - 45) / 2;
+
+    exit_win = newwin(HEIGHT, WIDTH, y, x);
 
     box(exit_win, 0, 0);
-    mvwprintw(exit_win, 1, (width - strlen(sure[0])) / 2, "%s", sure[0]);
-    mvwprintw(exit_win, 3, (width - strlen(sure[1])) / 2, "%s", sure[1]);
+    mvwprintw(exit_win, 1, (WIDTH - strlen(sure[0])) / 2, "%s", sure[0]);
+    mvwprintw(exit_win, 3, (WIDTH - strlen(sure[1])) / 2, "%s", sure[1]);
     wrefresh(exit_win);
 
     ch = getch();
@@ -325,9 +324,8 @@ void print_logo()
                                              };
 
     // Logo window size
-    int win_rows, win_cols;
-    win_rows = 9;
-    win_cols = 65;
+    const int WIN_ROWS = 9;
+    const int WIN_COLS = 65;
 
     // Print borders
     box(logo_win, 0, 0);
@@ -357,8 +355,8 @@ void print_logo()
 
     // Print author
     int y, x;
-    y = win_rows - 2;
-    x = win_cols - strlen(author) - 5;
+    y = WIN_ROWS - 2;
+    x = WIN_COLS - strlen(author) - 5;
 
     mvwprintw(logo_win, y, x, "%s", author);
 
@@ -378,10 +376,10 @@ void print_instructions()
                             " to quit          q"};
 
     // Get window size & printing position
-    int win_cols, x;
-    win_cols = getmaxx(instructions_win);
+    const int WIN_COLS = getmaxx(instructions_win);
 
-    x = win_cols / 8;
+    int x;
+    x = WIN_COLS / 8;
     x = (x > 0) ? x : 1;           // x must be higher than 0
 
     // Print instructions
@@ -499,12 +497,11 @@ void print_board(int board[3][3], WINDOW *board_win)
                     "|   |   |   |",
                     " --- --- --- "};
 
-    int grid_width, grid_height;
-    grid_height = 7;
-    grid_width = 13;
+    const int GRID_HEIGHT = 7;
+    const int GRID_WIDTH  = 13;
 
     // Print grid
-    for (int i = 0; i < grid_height; i++)
+    for (int i = 0; i < GRID_HEIGHT; i++)
     {
         mvwprintw(board_win, i, 0, "%s", grid[i]);
     }
@@ -513,11 +510,11 @@ void print_board(int board[3][3], WINDOW *board_win)
     int x, y;
     x = y = 0;
 
-    for (int i = 1; i < grid_height; i += 2)
+    for (int i = 1; i < GRID_HEIGHT; i += 2)
     {
         x = 0;
 
-        for (int j = 2; j < grid_width; j += 4)
+        for (int j = 2; j < GRID_WIDTH; j += 4)
         {
             // Print character 
             switch (board[y][x])
@@ -557,6 +554,8 @@ void print_menu(int which)
                                 "     -> Save game                       ",
                                 "     -> Quit                            "};
     
+    const int NO_MENU_CHOICES = 7;
+
     // Print borders & tag
     wclear(menu_win);
     box(menu_win, 0, 0);
@@ -599,10 +598,8 @@ void print_status(int turn)
     mvwprintw(status_win, 0, 1, "%s", tag);
 
     // Printing position
-    int x, y;
-    x = 4;
-    y = 1;
-
+    const int X = 4;
+    const int Y = 1;
 
     // Print turn status
     if (which_mode == COMPU_MODE)
@@ -610,12 +607,12 @@ void print_status(int turn)
         // Computer turn
         if (turn == 1)
         {
-            mvwprintw(status_win, y, x, "%s", status[2]);
+            mvwprintw(status_win, Y, X, "%s", status[2]);
         }
         // User turn 
         else if (turn == -1)
         {
-            mvwprintw(status_win, y, x, "%s", status[3]);
+            mvwprintw(status_win, Y, X, "%s", status[3]);
         }
     }
     else if (which_mode == HUMAN_MODE)
@@ -623,12 +620,12 @@ void print_status(int turn)
         // Player 1 turn 
         if (turn == 1)
         {
-            mvwprintw(status_win, y, x, "%s", status[0]);
+            mvwprintw(status_win, Y, X, "%s", status[0]);
         }
         // User turn 
         else if (turn == -1)
         {
-            mvwprintw(status_win, y, x, "%s", status[1]);
+            mvwprintw(status_win, Y, X, "%s", status[1]);
         }
     }
 
@@ -701,8 +698,9 @@ void print_end_msg(int who_won)
     wrefresh(main_win);
 
     // Get window size & printing position
-    int cols, x1, x2;
-    cols = getmaxx(endgame_win);
+    const int COLS = getmaxx(endgame_win);
+
+    int x1, x2;
 
     // Computer mode 
     if (which_mode == COMPU_MODE)
@@ -710,8 +708,8 @@ void print_end_msg(int who_won)
         // User won
         if (who_won == -1)
         {
-            x1 = (cols - strlen(win_msg[0])) / 2;
-            x2 = (cols - strlen(win_msg[2])) / 2;
+            x1 = (COLS - strlen(win_msg[0])) / 2;
+            x2 = (COLS - strlen(win_msg[2])) / 2;
 
             mvwprintw(endgame_win, 0, x1, "%s", win_msg[0]);
             mvwprintw(endgame_win, 1, x2, "%s", win_msg[2]);
@@ -719,8 +717,8 @@ void print_end_msg(int who_won)
         // Computer won
         else if (who_won == 1)
         {
-            x1 = (cols - strlen(lose_msg[0])) / 2;
-            x2 = (cols - strlen(lose_msg[1])) / 2;
+            x1 = (COLS - strlen(lose_msg[0])) / 2;
+            x2 = (COLS - strlen(lose_msg[1])) / 2;
 
             mvwprintw(endgame_win, 0, x1, "%s", lose_msg[0]);
             mvwprintw(endgame_win, 1, x2, "%s", lose_msg[1]);
@@ -732,8 +730,8 @@ void print_end_msg(int who_won)
         // Find winner 
         char *winner = (who_won == 1) ? "PLAYER 1" : "PLAYER 2";
 
-        x1 = (cols - strlen(win_msg[0])) / 2;
-        x2 = (cols - strlen(win_msg[1])) / 2;
+        x1 = (COLS - strlen(win_msg[0])) / 2;
+        x2 = (COLS - strlen(win_msg[1])) / 2;
 
         mvwprintw(endgame_win, 0, x1, "%s", win_msg[0]);
         mvwprintw(endgame_win, 1, x2, "%s", winner);
@@ -786,7 +784,7 @@ void print_error(int error_num, int which_win)
 
         x = (cols - strlen(error_msgs[error_num]) - strlen(tag)) / 2;
         x = (x >= 0) ? x : 0;
-        y = 1;
+        y = 0;
 
         // Print error
         wclear(error_win);

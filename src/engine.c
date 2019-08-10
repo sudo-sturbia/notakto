@@ -274,8 +274,7 @@ void choose_move()
                         }
                         else
                         {
-                            int other_two_dead = ((i == 0) && dead_boards[1] && dead_boards[2]) || ((i == 1) && dead_boards[0] && dead_boards[2]) || ((i == 2) && dead_boards[0] && dead_boards[1]);
-                            if (other_two_dead && is_dead(copy[i]))
+                            if ((dead_boards[(i + 1) % 3] && dead_boards[(i + 2) % 3]) && is_dead(copy[i]))
                             {
                                 move_scores[26 - (losing_counter++)] = i * 9 + j * 3 + k;
                             }
