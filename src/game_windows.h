@@ -14,7 +14,7 @@ void resize_or_quit(int ch);
 void print_logo();
 void print_instructions();
 
-void print_side_menu(int which_win);
+void print_side_menu(int which_win, int is_used);
 void print_boards(int x, int y);
 void print_board(int board[3][3], WINDOW *board_win);
 void print_menu(int which);

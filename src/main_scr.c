@@ -167,7 +167,7 @@ int play_two_user(int loaded)
 
     // Display initial state of windows
     print_boards(-1, -1);
-    print_side_menu(BOARDS_WIN);
+    print_side_menu(BOARDS_WIN, 0);
 
     while (!is_finished())
     {
@@ -217,7 +217,7 @@ int play_compu(int loaded)
     wrefresh(main_win);
 
     print_boards(-1, -1);
-    print_side_menu(BOARDS_WIN);
+    print_side_menu(BOARDS_WIN, 0);
 
     // If computer plays 1st move
     if (order)
@@ -343,7 +343,7 @@ int get_user_move()
             redrawwin(error_win);
             wrefresh(error_win);
 
-            print_side_menu(BOARDS_WIN);
+            print_side_menu(BOARDS_WIN, 0);
             print_status(turn);
         }
 
@@ -413,10 +413,15 @@ int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice)
             break;
         // Use side menu
         case 's':
-            if (use_side_menu(BOARDS_WIN) == MENU_WIN)
+            switch (use_side_menu(BOARDS_WIN))
             {
-                *menu_choice = use_menu();
-                return 0;
+                case MENU_WIN:
+                    *menu_choice = use_menu();
+                    return 0;
+                    break;
+                case BOARDS_WIN:
+                    print_side_menu(BOARDS_WIN, 0);
+                    break;
             }
             break;
         // User quit
@@ -445,7 +450,7 @@ int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice)
             adjust_windows();
 
             // Re-print windows
-            print_side_menu(BOARDS_WIN);
+            print_side_menu(BOARDS_WIN, 0);
             print_status(turn);
 
             break;
@@ -471,7 +476,7 @@ int use_menu()
     box(main_win, 0, 0);
     wrefresh(main_win);
 
-    print_side_menu(MENU_WIN);
+    print_side_menu(MENU_WIN, 0);
     wrefresh(side_menu_win);
 
     print_menu(-1);
@@ -511,8 +516,10 @@ int use_menu()
                 {
                     case BOARDS_WIN:
                         return CONTINUE;
-                    case QUIT:
-                        return QUIT;
+                        break;
+                    case MENU_WIN:
+                        print_side_menu(MENU_WIN, 0);
+                        break;
                 }
                 break;
             // User quit
@@ -535,7 +542,7 @@ int use_menu()
             case KEY_RESIZE:
                 // Re-create windows
                 adjust_windows();
-                print_side_menu(MENU_WIN);
+                print_side_menu(MENU_WIN, 0);
 
                 break;
             // Invalid key
@@ -623,7 +630,7 @@ int use_side_menu(int which_win)
         }
         
         // Print choices
-        print_side_menu(navigate);
+        print_side_menu(navigate, 1);
     }
 
     return 0;

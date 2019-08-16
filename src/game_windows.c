@@ -43,7 +43,7 @@ void resize_or_quit(int ch);
 void print_logo();
 void print_instructions();
 
-void print_side_menu(int which_win);
+void print_side_menu(int which_win, int is_used);
 void print_boards(int x, int y);
 void print_board(int board[3][3], WINDOW *board_win);
 void print_menu(int which);
@@ -371,9 +371,9 @@ void print_instructions()
                             " to navigate        ^",
                             "            < h  j  k  l >",
                             "                 v",
-                            "\n",
                             " for side menu    s",
-                            " to quit          q"};
+                            " to quit          q",
+                            " to make a choice ENTER"};
 
     // Get window size & printing position
     const int WIN_COLS = getmaxx(instructions_win);
@@ -398,7 +398,7 @@ void print_instructions()
 }
 
 // Print side menu -> indicates which window is being used
-void print_side_menu(int which_win)
+void print_side_menu(int which_win, int is_used)
 {
     char *tag = " CURRENT-WINDOW:";
     char *windows[] = {" - Game",
@@ -411,7 +411,17 @@ void print_side_menu(int which_win)
     box(side_menu_win, 0, 0);
 
     // Print tag
+    if (is_used)
+    {
+        wattron(side_menu_win, A_BOLD | A_ITALIC);
+    }
+
     mvwprintw(side_menu_win, 0, 1, "%s", tag);
+
+    if (is_used)
+    {
+        wattroff(side_menu_win, A_BOLD | A_ITALIC);
+    }
 
     // Print menu
     for (int i = 0; i < 2; i++)
