@@ -22,8 +22,7 @@ int choose_mode();
 int playing_order();
 int play_again(int who_won);
 
-int navigate(int ch, int *which_pr);
-
+int navigate_two_choices(int ch, int *which_pr);
 void print_options(WINDOW *which_win, char *prompt, char *highlighted[], char *not_highlighted[], int which);
 
 #endif

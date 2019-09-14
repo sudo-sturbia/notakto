@@ -7,9 +7,6 @@
 #include "moves.h"
 
 /* DEFINITIONS */
-#define HUMAN_MODE 0
-#define COMPU_MODE 1
-
 #define BOARDS_WIN 0 
 #define MENU_WIN   1 
 
@@ -70,8 +67,7 @@ int choose_mode();
 int playing_order();
 int play_again(int who_won);
 
-int navigate(int ch, int *which_pr);
-
+int navigate_two_choices(int ch, int *which_pr);
 void print_options(WINDOW *which_win, char *prompt, char *highlighted[], char *not_highlighted[], int which);
 
 // Initialize game
@@ -106,18 +102,21 @@ void init_game()
     initial_msg();
 
     // Play games until user quits
-    for (;;)
-    {
+    int who_won;
+    const int HUMAN_MODE = 0;
+    const int COMPU_MODE = 1;
+
+    do {
         // Initialize undo & redo stacks
         init_stacks();
 
-        // New or previous game
-        int game_loaded = 0;
+        // New or loaded game
+        int loaded_game = 0;
         if (new_or_load())
         {
             if (load_game())
             {
-                game_loaded = 1;
+                loaded_game = 1;
                 goto loaded;
             }
         }
@@ -128,30 +127,25 @@ void init_game()
         // Fill boards with 0
         fill_boards();
    
-        loaded:
+    loaded:
         // Clear main window & redraw borders
         wclear(main_win);
         box(main_win, 0, 0);
         wrefresh(main_win);
 
-        int who_won;
-
+        // Play game & get winner
         if (which_mode == HUMAN_MODE)
         {
-            who_won = play_two_user(game_loaded);
+            who_won = play_two_user(loaded_game);
         }
         else if (which_mode == COMPU_MODE)
         {
-            who_won = play_compu(game_loaded);
-        }
-
-        if (who_won != 2 && play_again(who_won))
-        {
-            break;
+            who_won = play_compu(loaded_game);
         }
 
         clear_stacks();
-    }
+
+    }while (who_won == 2 || !play_again(who_won));
     
     destroy_windows();
 }
@@ -159,7 +153,7 @@ void init_game()
 // Two user game -> return winner
 int play_two_user(int loaded)
 {
-    // Set turn & increase no. of games
+    // Set turn for a new game
     if (!loaded)
     {
         turn = 1;
@@ -169,6 +163,7 @@ int play_two_user(int loaded)
     print_boards(-1, -1);
     print_side_menu(BOARDS_WIN, 0);
 
+    // Play moves until the game ends or user restarts
     while (!is_finished())
     {
         wclear(error_win);
@@ -176,6 +171,7 @@ int play_two_user(int loaded)
 
         print_status(turn);
 
+        // Prompt user for move
         if (get_user_move())
         {
             // Restart
@@ -199,11 +195,11 @@ int play_two_user(int loaded)
     return turn;
 }
 
-// Game against engine
+// Game against engine -> return winner
 int play_compu(int loaded)
 {
     // Set turn & playing order
-    // If game is loaded -> always user's turn to play
+    // If the game is loaded -> user's turn
     turn = -1; 
     int order = 0;
     if (!loaded)
@@ -219,7 +215,8 @@ int play_compu(int loaded)
     print_boards(-1, -1);
     print_side_menu(BOARDS_WIN, 0);
 
-    // If computer plays 1st move
+    // If user chooses to play 2nd
+    // play computer's 1st move
     if (order)
     {
         print_status(1);
@@ -228,6 +225,7 @@ int play_compu(int loaded)
         print_boards(-1, -1);
     }
 
+    // Play moves until game ends or user restarts
     while (!is_finished())
     {
         print_status(turn);
@@ -264,7 +262,7 @@ int play_compu(int loaded)
     return turn;
 }
 
-// Get & play user move
+// Get a user move & play it
 // Returns 2: restart, 0: otherwise
 int get_user_move()
 {
@@ -281,7 +279,7 @@ int get_user_move()
         redrawwin(status_win);
         wrefresh(status_win);
 
-        // Check if user made a choice
+        // Check if user choose a move
         if (navigate_boards(ch, &x, &y, &menu_choice))
         {
             // Validate move
@@ -294,6 +292,7 @@ int get_user_move()
             }
             else
             {
+                // Invalid move
                 if (dead_boards[x / 3])
                 {
                     print_error(0, 0);
@@ -360,6 +359,8 @@ next_move:
 int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice)
 {
     // Set variables for use inside function
+    const int BOARDS_HEIGHT = 3;
+    const int BOARDS_WIDTH  = BOARDS_HEIGHT * NO_BOARDS;
     int x, y;
     x = *x_pr;
     y = *y_pr;
@@ -383,7 +384,7 @@ int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice)
         case 'j':
             y++;
             // Check for borders
-            if (y > 2)
+            if (y > BOARDS_HEIGHT - 1)
             {
                 print_error(4, 0);
                 y--;
@@ -405,7 +406,7 @@ int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice)
         case 'l':
             x++;
             // Check for borders
-            if (x > 8)
+            if (x > BOARDS_WIDTH - 1)
             {
                 print_error(4, 0);
                 x--;
@@ -431,7 +432,7 @@ int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice)
         // User made a choice -> enter
         case 10:
             // Check if number is valid
-            if (x > 8 || x < 0 || y > 2 || y < 0)
+            if (x > BOARDS_WIDTH - 1 || x < 0 || y > BOARDS_HEIGHT - 1 || y < 0)
             {
                 print_error(2, 0);
             }
@@ -524,9 +525,9 @@ int use_menu()
                 break;
             // User quit
             case 'q':
-                exit_game(0);
+                return QUIT;
                 break;
-            // Enter key
+            // User made a choice -> enter key
             case 10:
                 // Check choice
                 if (which < 0 || which > NO_MENU_CHOICES - 1)
@@ -560,7 +561,10 @@ int use_menu()
 // Use side menu -> choose shown window
 int use_side_menu(int which_win)
 {
+    // Print side menu with highlighting
+    int NO_MENU_CHOICES = 2;
     int navigate = which_win;
+    print_side_menu(navigate, 1);
 
     // Navigate through choices & take user choice
     int ch;
@@ -585,7 +589,7 @@ int use_side_menu(int which_win)
             case 'j':
                 navigate++;
                 // Check borders
-                if (navigate > 1)
+                if (navigate > NO_MENU_CHOICES - 1)
                 {
                     navigate--;
                 }
@@ -694,7 +698,7 @@ int new_or_load()
     while ((ch = getch()))
     {
         // Check if user made a choice
-        if (navigate(ch, &which))
+        if (navigate_two_choices(ch, &which))
         {
             return which - 1;
         }
@@ -729,7 +733,7 @@ int choose_mode()
     while ((ch = getch()))
     {
         // Check if user made a choice
-        if (navigate(ch, &which))
+        if (navigate_two_choices(ch, &which))
         {
             return which - 1;
         }
@@ -764,7 +768,7 @@ int playing_order()
     while ((ch = getch()))
     {
         // Check if user made a choice
-        if (navigate(ch, &which))
+        if (navigate_two_choices(ch, &which))
         {
             return which - 1;
         }
@@ -801,7 +805,7 @@ int play_again(int who_won)
     while ((ch = getch()))
     {
         // Check if user made a choice
-        if (navigate(ch, &which))
+        if (navigate_two_choices(ch, &which))
         {
             return which - 1;
         }
@@ -815,7 +819,7 @@ int play_again(int who_won)
 
 // Navigate between choices & highlight choice
 // Returns 1 if user made a choice, 0 otherwise
-int navigate(int ch, int *which_pr)
+int navigate_two_choices(int ch, int *which_pr)
 {
     // Set which variable
     int which = *which_pr;

@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "moves.h"
+
 /* DEFINITIONS */
 #define HUMAN_MODE 0
 #define COMPU_MODE 1
@@ -239,6 +241,8 @@ void exit_game(int code)
     {
         delwin(exit_win);
         destroy_windows();
+        clear_stacks();
+
         endwin();
         exit(code);
     }
@@ -309,16 +313,16 @@ void resize_or_quit(int ch)
 void print_logo()
 {
     // Logo & author
-    // Logo is represented using an integer array where -> 0: ' ', 1: block, 2: |, 4: -
+    // Logo is represented using an integer array where -> 0: ' ', 1: block, 2: |, 3: -
     char *author = "@sudo-sturbia";
     int logo_arr[LOGO_HEIGHT][LOGO_WIDTH] = {{1, 1, 1, 2, 0, 0, 0, 1, 1, 2, 0, 1, 1, 1, 1, 1, 1, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 1, 1,
                                               1, 1, 1, 2, 0, 1, 1, 2, 0, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 1, 1, 1, 1, 1, 1, 2, 0},
-                                             {1, 1, 1, 1, 2, 0, 0, 1, 1, 2, 1, 1, 2, 4, 4, 4, 1, 1, 2, 0, 4, 4, 1, 1, 2, 4, 4, 0, 1, 1, 2,
-                                              4, 4, 1, 1, 2, 1, 1, 2, 0, 1, 1, 2, 0, 0, 4, 4, 1, 1, 4, 4, 4, 0, 1, 1, 2, 4, 4, 4, 1, 1, 2},
+                                             {1, 1, 1, 1, 2, 0, 0, 1, 1, 2, 1, 1, 2, 3, 3, 3, 1, 1, 2, 0, 3, 3, 1, 1, 2, 3, 3, 0, 1, 1, 2,
+                                              3, 3, 1, 1, 2, 1, 1, 2, 0, 1, 1, 2, 0, 0, 3, 3, 1, 1, 2, 3, 3, 0, 1, 1, 2, 3, 3, 3, 1, 1, 2},
                                              {1, 1, 2, 1, 1, 2, 0, 1, 1, 2, 1, 1, 2, 0, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 1,
                                               1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2},
                                              {1, 1, 2, 0, 1, 1, 2, 1, 1, 2, 1, 1, 2, 0, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2,
-                                              4, 4, 1, 1, 2, 1, 1, 2, 4, 1, 1, 2, 0, 0, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2},
+                                              3, 3, 1, 1, 2, 1, 1, 2, 3, 1, 1, 2, 0, 0, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2},
                                              {1, 1, 2, 0, 0, 1, 1, 1, 1, 2, 0, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2,
                                               0, 0, 1, 1, 2, 1, 1, 2, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 0}
                                              };
@@ -346,7 +350,7 @@ void print_logo()
                 case 2:
                     mvwaddch(logo_win, i + 2, j + 2, '|');
                     break;
-                case 4:
+                case 3:
                     mvwaddch(logo_win, i + 2, j + 2, '-');
                     break;
             }
@@ -366,6 +370,7 @@ void print_logo()
 // Print game instructions 
 void print_instructions()
 {
+    const int NO_LINES = 8;
     char *instructions[] = {" INSTRUCTIONS:",
                             "\n",
                             " to navigate        ^",
@@ -383,7 +388,7 @@ void print_instructions()
     x = (x > 0) ? x : 1;           // x must be higher than 0
 
     // Print instructions
-    for (int i = 1; i <= 7; i++)
+    for (int i = 1; i < NO_LINES; i++)
     {
         mvwprintw(instructions_win, i, x, "%s", instructions[i]);
     }
@@ -405,17 +410,19 @@ void print_side_menu(int which_win, int is_used)
                        " - Menu"};
     char *windows_highlighted[] = {"     -> Game    ",
                                    "     -> Menu    "};
+    const int NO_CHOICES = 2;
 
     // Clear window & print borders
     wclear(side_menu_win);
     box(side_menu_win, 0, 0);
 
-    // Print tag
+    // Highlight tag if side menu is being used
     if (is_used)
     {
         wattron(side_menu_win, A_BOLD | A_ITALIC);
     }
 
+    // Print tag
     mvwprintw(side_menu_win, 0, 1, "%s", tag);
 
     if (is_used)
@@ -424,7 +431,7 @@ void print_side_menu(int which_win, int is_used)
     }
 
     // Print menu
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < NO_CHOICES; i++)
     {
         // Highlighted choice
         if (i == which_win)
@@ -454,20 +461,7 @@ void print_boards(int x, int y)
     }
 
     // Find which board has highlighted element
-    int which_board;
-    if (x > 5)
-    {
-        which_board = 2;
-    }
-    else if (x > 2)
-    {
-        which_board = 1;
-    }
-    else
-    {
-        which_board = 0;
-    }
-
+    int which_board = x / 3;
     x %= 3;
 
     // Calculate printing position
@@ -550,16 +544,16 @@ void print_menu(int which)
     char *tag = " MENU:";
     char *menu[] = {" - Restart",
                     " - Continue",
-                    " - Undo last move",
-                    " - Redo last move",
+                    " - Undo",
+                    " - Redo",
                     " - Playing stats",
                     " - Save game",
                     " - Quit"};
 
     char *highlighted_menu[] = {"     -> Restart                         ",
                                 "     -> Continue                        ",
-                                "     -> Undo last move                  ",
-                                "     -> Redo last move                  ",
+                                "     -> Undo                            ",
+                                "     -> Redo                            ",
                                 "     -> Playing stats                   ",
                                 "     -> Save game                       ",
                                 "     -> Quit                            "};
@@ -595,10 +589,10 @@ void print_menu(int which)
 void print_status(int turn)
 {
     char *tag = " STATUS:";
-    char *status[] = {"Player 1 to play",
-                      "Player 2 to play",
-                      "Thinking ...",
-                      "Your turn"};
+    char *two_player_status[] = {"Player 1 to play",
+                                 "Player 2 to play"};
+    char *computer_status[]   = {"Thinking ...",
+                                 "Your turn"};
 
     // Clear status window & print borders
     wclear(status_win);
@@ -611,31 +605,32 @@ void print_status(int turn)
     const int X = 4;
     const int Y = 1;
 
-    // Print turn status
+    // Print turn in computer mode
     if (which_mode == COMPU_MODE)
     {
         // Computer turn
         if (turn == 1)
         {
-            mvwprintw(status_win, Y, X, "%s", status[2]);
+            mvwprintw(status_win, Y, X, "%s", computer_status[0]);
         }
         // User turn 
         else if (turn == -1)
         {
-            mvwprintw(status_win, Y, X, "%s", status[3]);
+            mvwprintw(status_win, Y, X, "%s", computer_status[1]);
         }
     }
+    // Print turn in two player mode
     else if (which_mode == HUMAN_MODE)
     {
         // Player 1 turn 
         if (turn == 1)
         {
-            mvwprintw(status_win, Y, X, "%s", status[0]);
+            mvwprintw(status_win, Y, X, "%s", two_player_status[0]);
         }
-        // User turn 
+        // Player 2 turn 
         else if (turn == -1)
         {
-            mvwprintw(status_win, Y, X, "%s", status[1]);
+            mvwprintw(status_win, Y, X, "%s", two_player_status[1]);
         }
     }
 
@@ -672,6 +667,9 @@ void print_stats(int engine_games[2], int two_user_games[2])
     }
 
     // Print stats
+    const int STATS_WIN_WIDTH  = 58;
+    const int STATS_WIN_HEIGHT = 10;
+
     mvwprintw(stats_win, 0, 0, "| TOTAL GAMES      : %3i", t_user_games + t_engine_games);
     mvwprintw(stats_win, 1, 0, " --------------------------------------------------------");
     mvwprintw(stats_win, 2, 0, "| vs Computer      : %3i  | Wins          : %3i   | %%%2.2f", t_engine_games, engine_games[0], comp_wins );
@@ -681,7 +679,7 @@ void print_stats(int engine_games[2], int two_user_games[2])
     mvwprintw(stats_win, 6, 0, "|                         | Player 2 wins : %3i   | %%%2.2f"              , two_user_games[1], p2_wins);
 
     char *prompt = "PRESS ANY KEY TO RETURN";
-    mvwprintw(stats_win, 9, (58 - strlen(prompt)) / 2, "%s", prompt);
+    mvwprintw(stats_win, STATS_WIN_HEIGHT - 1, (STATS_WIN_WIDTH - strlen(prompt)) / 2, "%s", prompt);
 
     wrefresh(stats_win);
 
@@ -709,7 +707,6 @@ void print_end_msg(int who_won)
 
     // Get window size & printing position
     const int COLS = getmaxx(endgame_win);
-
     int x1, x2;
 
     // Computer mode 
@@ -737,7 +734,7 @@ void print_end_msg(int who_won)
     // Two user mode
     else if (which_mode == HUMAN_MODE)
     {
-        // Find winner 
+        // Find winner -> player 1 or 2 
         char *winner = (who_won == 1) ? "PLAYER 1" : "PLAYER 2";
 
         x1 = (COLS - strlen(win_msg[0])) / 2;
@@ -771,8 +768,22 @@ void print_error(int error_num, int which_win)
     // Get window size & printing position
     int rows, cols, y, x;
 
-    // Print in main window
-    if (which_win == 1)
+    // Print error message in error window
+    if (!which_win) 
+    {
+        getmaxyx(error_win, rows, cols);
+
+        x = (cols - strlen(error_msgs[error_num]) - strlen(tag)) / 2;
+        x = (x >= 0) ? x : 0;
+        y = 0;
+
+        // Print error
+        wclear(error_win);
+        mvwprintw(error_win, y, x, "%s%s", tag, error_msgs[error_num]);
+        wrefresh(error_win);
+    }
+    // Print error message in main window
+    else if (which_win == 1)
     {
         getmaxyx(main_win, rows, cols);
 
@@ -787,22 +798,8 @@ void print_error(int error_num, int which_win)
         mvwprintw(main_win, y, x, "%s%s", tag, error_msgs[error_num]);
         wrefresh(main_win);
     }
-    // Print in error window
-    else if (!which_win) 
-    {
-        getmaxyx(error_win, rows, cols);
-
-        x = (cols - strlen(error_msgs[error_num]) - strlen(tag)) / 2;
-        x = (x >= 0) ? x : 0;
-        y = 0;
-
-        // Print error
-        wclear(error_win);
-        mvwprintw(error_win, y, x, "%s%s", tag, error_msgs[error_num]);
-        wrefresh(error_win);
-    }
-    // Print in standard screen
-    else
+    // Print error message in standard screen
+    else if (which_win == 2)
     {
         getmaxyx(stdscr, rows, cols);
 
