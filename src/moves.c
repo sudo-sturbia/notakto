@@ -34,6 +34,9 @@ void mark_boards();
 int is_dead(int board[3][3]);
 
 void save_game();
+int write_game_data();
+void write_node(node *node_to_write, FILE *game_file);
+
 int load_game();
 
 node *create_node(int value[NO_BOARDS][3][3], node *next);
@@ -184,11 +187,8 @@ void save_game()
 
     resize_or_quit(ch);
 
-    // Open saving file
-    FILE *game_file;
-    game_file = fopen("game.txt", "w");
-    
-    if (game_file == NULL)
+    // Save game data
+    if (!write_game_data())    // Not saved correctly
     {
         print_error(8, 1);
         resize_or_quit(getch());
@@ -196,29 +196,6 @@ void save_game()
         return;
     }
 
-    // Save game data
-    fputc(which_mode, game_file);
-
-    for (int i = 0; i < 3; i++)
-    {
-        for (int j = 0; j < 3; j++)
-        {
-            for (int k = 0; k < 3; k++)
-            {
-                fputc(boards[i][j][k], game_file);
-            }
-        }
-    }
-
-    for (int i = 0; i < 3; i++)
-    {
-        fputc(dead_boards[i], game_file);
-    }
-
-    fputc(turn + 1, game_file);
-
-    fclose(game_file);
-    
     wclear(main_win);
     box(main_win, 0, 0);
 
@@ -231,6 +208,62 @@ void save_game()
     wrefresh(main_win);
 
     resize_or_quit(getch());
+}
+
+// Write game data to a file
+// Returns 1 : if correctly saved, 0 : otherwise
+int write_game_data()
+{
+    // Create a temporary stack reference
+    node *temp_stack = undo_stack;
+
+    // Open file to write
+    FILE *game_file;
+    game_file = fopen("game.txt", "w");
+
+    if (game_file == NULL)
+    {
+        return 0;
+    }
+
+    // Write game data to file
+    // Game mode
+    fputc(which_mode, game_file);
+
+    // Turn
+    fputc(turn + 1, game_file);
+
+    // Undo stack nodes
+    while (temp_stack != NULL)
+    {
+        write_node(temp_stack, game_file);
+        temp_stack = temp_stack -> next;
+    }
+
+    // Dead boards
+    for (int i = 0; i < NO_BOARDS; i++)
+    {
+        fputc(dead_boards[i], game_file);
+    }
+
+    fclose(game_file);
+
+    return 1;
+}
+
+// Write node to a file
+void write_node(node *node_to_write, FILE *game_file)
+{
+    for (int i = 0; i < NO_BOARDS; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            for (int k = 0; k < 3; k++)
+            {
+                fputc(node_to_write -> value[i][j][k], game_file);
+            }
+        }
+    }
 }
 
 // Load previously saved game

@@ -1,6 +1,8 @@
 #ifndef MOVES_H_INCLUDED
 #define MOVES_H_INCLUDED
 
+#include <stdio.h>
+
 typedef struct node node;
 
 /* DEFINITIONS */
@@ -16,6 +18,9 @@ void mark_boards();
 int is_dead(int board[3][3]);
 
 void save_game();
+int write_game_data();
+void write_node(node *node_to_write, FILE *game_file);
+
 int load_game();
 
 node *create_node(int value[NO_BOARDS][3][3], node *next);
