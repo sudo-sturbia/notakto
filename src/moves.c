@@ -38,6 +38,9 @@ int write_game_data();
 void write_node(node *node_to_write, FILE *game_file);
 
 int load_game();
+int check_game_data(FILE *game_file, int *number_of_nodes);
+void read_game_data(FILE *game_file, int number_of_nodes);
+void read_undo_stack(FILE *game_file, int number_of_nodes);
 
 node *create_node(int value[NO_BOARDS][3][3], node *next);
 
@@ -231,19 +234,31 @@ int write_game_data()
     fputc(which_mode, game_file);
 
     // Turn
-    fputc(turn + 1, game_file);
+    fputc(((turn == -1) ? 0 : turn), game_file);
+
+    // Dead boards array
+    for (int i = 0; i < NO_BOARDS; i++)
+    {
+        fputc(dead_boards[i], game_file);
+    }
+
+    // Game boards
+    for (int i = 0; i < NO_BOARDS; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            for (int k = 0; k < 3; k++)
+            {
+                fputc(boards[i][j][k], game_file);
+            }
+        }
+    }
 
     // Undo stack nodes
     while (temp_stack != NULL)
     {
         write_node(temp_stack, game_file);
         temp_stack = temp_stack -> next;
-    }
-
-    // Dead boards
-    for (int i = 0; i < NO_BOARDS; i++)
-    {
-        fputc(dead_boards[i], game_file);
     }
 
     fclose(game_file);
@@ -282,25 +297,14 @@ int load_game()
         return 0;
     }
 
-    // Checking file
-    int ch, counter, no_chars;
-    counter = 0;
-    no_chars = 3 * 3 * 3 + 3 + 1 + 1;
-
-    while ((ch = fgetc(game_file)) != EOF)
+    // Check game data
+    int number_of_nodes;
+    if (check_game_data(game_file, &number_of_nodes))
     {
-        counter++;
-
-        if ((ch != 1 && ch != 0) && ((counter == no_chars) && ch != 0 && ch != 2))
-        {
-            print_error(10, 1);
-            resize_or_quit(getch());
-
-            return 0;
-        }
+        // Read game data
+        read_game_data(game_file, number_of_nodes - 1);
     }
-
-    if (counter != no_chars)
+    else
     {
         print_error(10, 1);
         resize_or_quit(getch());
@@ -308,12 +312,61 @@ int load_game()
         return 0;
     }
 
-    // Get game data
+    fclose(game_file);
+
+    return 1;
+}
+
+// Check game file data
+// Return 1: if data is correct, 0: if not
+int check_game_data(FILE *game_file, int *number_of_nodes)
+{
+    // Count characters & check their value
+    int ch;
+    int counter = 0;
+
+    while ((ch = fgetc(game_file)) != EOF)
+    {
+        counter++;
+
+        if (ch != 1 && ch != 0)
+        {
+            return 0;
+        }
+    }
+
+    if (!((counter - 5) % 27))
+    {
+        *number_of_nodes = ((counter - 5) / 27) - 1;
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+// Read game data
+void read_game_data(FILE *game_file, int number_of_nodes)
+{
+    // Read game data
     fseek(game_file, 0, SEEK_SET);
 
+    // Game mode
     which_mode = fgetc(game_file);
 
-    for (int i = 0; i < 3; i++)
+    // Turn
+    turn = fgetc(game_file);
+    turn = (turn == 0) ? -1 : turn;
+
+    // Dead boards array
+    for (int i = 0; i < NO_BOARDS; i++)
+    {
+        dead_boards[i] = fgetc(game_file);
+    }
+
+    // Game boards
+    for (int i = 0; i < NO_BOARDS; i++)
     {
         for (int j = 0; j < 3; j++)
         {
@@ -324,17 +377,34 @@ int load_game()
         }
     }
 
-    for (int i = 0; i < 3; i++)
+    // Undo stack nodes
+    read_undo_stack(game_file, number_of_nodes);
+}
+
+// Read undo stack nodes from a file
+void read_undo_stack(FILE *game_file, int number_of_nodes)
+{
+    // Read node boards
+    int node_boards[NO_BOARDS][3][3];
+
+    for (int i = 0; i < NO_BOARDS; i++)
     {
-        dead_boards[i] = fgetc(game_file);
+        for (int j = 0; j < 3; j++)
+        {
+            for (int k = 0; k < 3; k++)
+            {
+                node_boards[i][j][k] = fgetc(game_file);
+            }
+        }
     }
 
-    turn = fgetc(game_file);
-    turn -= 1;
+    if (number_of_nodes)
+    {
+        read_undo_stack(game_file, --number_of_nodes);
+    }
 
-    fclose(game_file);
-
-    return 1;
+    // Push boards to undo stack
+    undo_stack = push(undo_stack, node_boards);
 }
 
 /* UNDO & REDO */

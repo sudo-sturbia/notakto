@@ -22,6 +22,9 @@ int write_game_data();
 void write_node(node *node_to_write, FILE *game_file);
 
 int load_game();
+int check_game_data(FILE *game_file, int *number_of_nodes);
+void read_game_data(FILE *game_file, int number_of_nodes);
+void read_undo_stack(FILE *game_file, int number_of_nodes);
 
 node *create_node(int value[NO_BOARDS][3][3], node *next);
 
