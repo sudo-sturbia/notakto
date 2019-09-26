@@ -18,7 +18,8 @@ void mark_boards();
 int is_dead(int board[3][3]);
 
 void save_game();
-int write_game_data();
+char *save_prompt();
+int write_game_data(char *file_name);
 void write_node(node *node_to_write, FILE *game_file);
 
 int load_game();

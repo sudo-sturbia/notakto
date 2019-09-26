@@ -2,6 +2,9 @@
 #include <ncurses.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h> 
 
 #include "game_windows.h"
 
@@ -34,7 +37,8 @@ void mark_boards();
 int is_dead(int board[3][3]);
 
 void save_game();
-int write_game_data();
+char *save_prompt();
+int write_game_data(char *file_name);
 void write_node(node *node_to_write, FILE *game_file);
 
 int load_game();
@@ -159,39 +163,10 @@ int is_dead(int board[3][3])
 // Save current game
 void save_game()
 {
-    char *warning = "WARNING: saving this game overwrites any previously saved games.";
-    char *prompt  = "Press a to abort, any other key to proceed";
-    char *success = "Game succefully saved, press any key to continue";
-
-    // Print warning
-    int ch;
-    int ROWS, COLS, x, y;
-    getmaxyx(main_win, ROWS, COLS);
-
-    x = (COLS - strlen(warning)) / 2;
-    y = ROWS / 2;
-
-    wclear(main_win);
-    box(main_win, 0, 0);
-    mvwprintw(main_win, y, x, "%s", warning);
-
-    x = (COLS - strlen(prompt)) / 2;
-    y += 1;
-
-    mvwprintw(main_win, y, x, "%s", prompt);
-    wrefresh(main_win);
-
-    ch = getch();
-    if (ch == 'a')
-    {
-        // User aborted saving
-        return;
-    }
-
-    resize_or_quit(ch);
+    char *file_name = save_prompt();
 
     // Save game data
-    if (!write_game_data())    // Not saved correctly
+    if (file_name == NULL || !write_game_data(file_name))    // No file name or Not saved correctly
     {
         print_error(8, 1);
         resize_or_quit(getch());
@@ -202,27 +177,109 @@ void save_game()
     wclear(main_win);
     box(main_win, 0, 0);
 
+    // Print success message
+    char *success = "Game succefully saved, press any key to continue";
+
+    int ROWS, COLS;
     getmaxyx(main_win, ROWS, COLS);
 
-    x = (COLS - strlen(success)) / 2;
-    y = ROWS / 2;
-
-    mvwprintw(main_win, y, x, "%s", success);
+    mvwprintw(main_win, ROWS / 2, (COLS - strlen(success)) / 2, "%s", success);
     wrefresh(main_win);
 
     resize_or_quit(getch());
 }
 
+// Prompt user for file name to save game
+// Returns name of file to open
+char *save_prompt()
+{
+    const int MAX_INPUT_SIZE = 40;
+
+    int ROWS, COLS;
+    getmaxyx(main_win, ROWS, COLS);
+
+    // Print warning & prompt
+    char *prompt  = "Enter A file name";
+    char *warning = "WARNING: saving will override any previously saved file by the same name";
+    char *press   = "Press ENTER to proceed";
+
+    wclear(main_win);
+    box(main_win, 0, 0);
+
+    mvwprintw(main_win, (ROWS - 9) / 2, (COLS - strlen(prompt))/ 2, "%s", prompt);
+    mvwprintw(main_win, (ROWS - 7) / 2, (COLS - strlen(warning))/ 2, "%s", warning);
+    mvwprintw(main_win, (ROWS - 5) / 2, (COLS - strlen(press))/ 2, "%s", press);
+
+    wrefresh(main_win);
+
+    // Create a box for input
+    WINDOW *inner_box;
+    WINDOW *outer_box;
+
+    outer_box = newwin(3, (MAX_INPUT_SIZE + 2), (ROWS - 3) / 2, (COLS - (MAX_INPUT_SIZE + 2)) / 2);
+    inner_box = newwin(1, MAX_INPUT_SIZE, (ROWS - 1) / 2, (COLS - MAX_INPUT_SIZE) / 2);
+
+    box(outer_box, 0, 0);
+    wrefresh(inner_box);
+    wrefresh(outer_box);
+
+    // Take input
+    echo();
+    nocbreak();
+    curs_set(1);
+
+    char ch;
+    char input_str[MAX_INPUT_SIZE];
+    int char_counter = 0;
+    while ((ch = mvwgetch(inner_box, 0, 0)) != '\n')
+    {
+        input_str[char_counter++] = ch;
+    }
+
+    input_str[MAX_INPUT_SIZE] = '\0';
+
+    // Create a new string with the exact size to return
+    char *file_name = (char *) malloc(char_counter *sizeof(char));
+
+    for (int i = 0; i < char_counter; i++)
+    {
+        file_name[i] = input_str[i];
+    }
+
+    file_name[char_counter] = '\0';
+
+    noecho();
+    cbreak();
+    curs_set(0);
+
+    return file_name; 
+}
+
 // Write game data to a file
 // Returns 1 : if correctly saved, 0 : otherwise
-int write_game_data()
+int write_game_data(char *file_name)
 {
     // Create a temporary stack reference
     node *temp_stack = undo_stack;
 
+    // Append directory name & extension to file name
+    char *dir_name = "saved-games/";
+    char *extension = ".txt";
+
+    char *file = (char *) malloc((strlen(dir_name) + strlen(extension) + strlen(file_name)) * sizeof(char));    
+
+    strcat(strcat(strcat(file, dir_name), file_name), extension);
+
+    // Create a directory to save games to (if non-existant)
+    struct stat st;
+    if (stat("saved-games", &st) == -1)   // If directory doesn't exist
+    {
+        mkdir("saved-games", 0755);
+    }
+
     // Open file to write
     FILE *game_file;
-    game_file = fopen("game.txt", "w");
+    game_file = fopen(file, "w");
 
     if (game_file == NULL)
     {
@@ -288,7 +345,7 @@ int load_game()
     // Open file
     FILE *game_file;
 
-    game_file = fopen("game.txt", "r");
+    game_file = fopen("saved-games/game.txt", "r");
     if (game_file == NULL)
     {
         print_error(9, 1);
