@@ -37,7 +37,7 @@ void mark_boards();
 int is_dead(int board[3][3]);
 
 void save_game();
-char *save_prompt();
+char *file_name_prompt();
 int write_game_data(char *file_name);
 void write_node(node *node_to_write, FILE *game_file);
 
@@ -163,7 +163,8 @@ int is_dead(int board[3][3])
 // Save current game
 void save_game()
 {
-    char *file_name = save_prompt();
+    // Prompt user for file name
+    char *file_name = file_name_prompt();
 
     // Save game data
     if (file_name == NULL || !write_game_data(file_name))    // No file name or Not saved correctly
@@ -173,6 +174,8 @@ void save_game()
 
         return;
     }
+
+    free(file_name);
 
     wclear(main_win);
     box(main_win, 0, 0);
@@ -189,9 +192,9 @@ void save_game()
     resize_or_quit(getch());
 }
 
-// Prompt user for file name to save game
+// Prompt user for a file name
 // Returns name of file to open
-char *save_prompt()
+char *file_name_prompt()
 {
     const int MAX_INPUT_SIZE = 40;
 
@@ -200,14 +203,12 @@ char *save_prompt()
 
     // Print warning & prompt
     char *prompt  = "Enter A file name";
-    char *warning = "WARNING: saving will override any previously saved file by the same name";
     char *press   = "Press ENTER to proceed";
 
     wclear(main_win);
     box(main_win, 0, 0);
 
-    mvwprintw(main_win, (ROWS - 9) / 2, (COLS - strlen(prompt))/ 2, "%s", prompt);
-    mvwprintw(main_win, (ROWS - 7) / 2, (COLS - strlen(warning))/ 2, "%s", warning);
+    mvwprintw(main_win, (ROWS - 7) / 2, (COLS - strlen(prompt))/ 2, "%s", prompt);
     mvwprintw(main_win, (ROWS - 5) / 2, (COLS - strlen(press))/ 2, "%s", press);
 
     wrefresh(main_win);
@@ -262,13 +263,11 @@ int write_game_data(char *file_name)
     // Create a temporary stack reference
     node *temp_stack = undo_stack;
 
-    // Append directory name & extension to file name
+    // Append directory name to file name
     char *dir_name = "saved-games/";
-    char *extension = ".txt";
+    char *file = (char *) malloc((strlen(dir_name) + strlen(file_name)) * sizeof(char));    
 
-    char *file = (char *) malloc((strlen(dir_name) + strlen(extension) + strlen(file_name)) * sizeof(char));    
-
-    strcat(strcat(strcat(file, dir_name), file_name), extension);
+    strcat(strcat(file, dir_name), file_name);
 
     // Create a directory to save games to (if non-existant)
     struct stat st;
@@ -318,6 +317,7 @@ int write_game_data(char *file_name)
         temp_stack = temp_stack -> next;
     }
 
+    free(file);
     fclose(game_file);
 
     return 1;
@@ -342,17 +342,29 @@ void write_node(node *node_to_write, FILE *game_file)
 // Returns 1: loaded correctly, 0: otherwise
 int load_game()
 {
-    // Open file
     FILE *game_file;
 
-    game_file = fopen("saved-games/game.txt", "r");
-    if (game_file == NULL)
-    {
-        print_error(9, 1);
-        resize_or_quit(getch());
+    do {
+        // Prompt user for file name
+        char *file_name = file_name_prompt();
 
-        return 0;
-    }
+        // Append directory name to file name
+        char *dir_name = "saved-games/";
+        char *file = (char *) malloc((strlen(dir_name) + strlen(file_name)) * sizeof(char));
+
+        strcat(strcat(file, dir_name), file_name);
+
+        // Open file
+        game_file = fopen(file, "r");
+        if (game_file == NULL)
+        {
+            print_error(9, 1);
+            resize_or_quit(getch());
+        }
+
+        free(file_name);
+        free(file);
+    }while (game_file == NULL);
 
     // Check game data
     int number_of_nodes;
