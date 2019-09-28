@@ -17,9 +17,10 @@
 #define CONTINUE 1
 #define UNDO     2
 #define REDO     3
-#define STATS    4
-#define SAVE     5 
-#define QUIT     6 
+#define SAVE     4
+#define LOAD     5
+#define STATS    6
+#define QUIT     7
 
 // Game boards -> if element = 0 -> empty space, 1 -> X
 int boards[NO_BOARDS][3][3];
@@ -320,11 +321,14 @@ int get_user_move()
                 case REDO:
                     redo();
                     break;
-                case STATS:
-                    print_stats(engine_games, two_user_games);
-                    break;
                 case SAVE:
                     save_game();
+                    break;
+                case LOAD:
+                    load_game();
+                    break;
+                case STATS:
+                    print_stats(engine_games, two_user_games);
                     break;
                 case QUIT:
                     exit_game(0);
@@ -470,7 +474,7 @@ int navigate_boards(int ch, int *x_pr, int *y_pr, int *menu_choice)
 // Use menu & return user choice
 int use_menu()
 {
-    const int NO_MENU_CHOICES = 7;
+    const int NO_MENU_CHOICES = 8;
 
     // Print on top of boards win
     wclear(main_win);

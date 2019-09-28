@@ -116,7 +116,7 @@ int create_windows()
         boards_win[2] = newwin(height, width, y, x + width * 2 + 8 * 2);
 
         // Create menu window -> inside main window
-        height = 11;
+        height = 12;
         width = 50;
         y = (rows - height - 9) / 2;
         x = (cols - width) / 2;
@@ -546,19 +546,21 @@ void print_menu(int which)
                     " - Continue",
                     " - Undo",
                     " - Redo",
-                    " - Playing stats",
                     " - Save game",
+                    " - Load game",
+                    " - Playing stats",
                     " - Quit"};
 
     char *highlighted_menu[] = {"     -> Restart                         ",
                                 "     -> Continue                        ",
                                 "     -> Undo                            ",
                                 "     -> Redo                            ",
-                                "     -> Playing stats                   ",
                                 "     -> Save game                       ",
+                                "     -> Load game                       ",
+                                "     -> Playing stats                   ",
                                 "     -> Quit                            "};
     
-    const int NO_MENU_CHOICES = 7;
+    const int NO_MENU_CHOICES = 8;
 
     // Print borders & tag
     wclear(menu_win);

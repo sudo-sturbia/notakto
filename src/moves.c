@@ -490,7 +490,11 @@ void read_game_data(FILE *game_file, int number_of_nodes)
     }
 
     // Undo stack nodes
-    read_undo_stack(game_file, number_of_nodes);
+    if (number_of_nodes >= 0)
+    {
+        init_stacks();
+        read_undo_stack(game_file, number_of_nodes);
+    }
 }
 
 // Read undo stack nodes from a file
