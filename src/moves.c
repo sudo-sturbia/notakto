@@ -1,5 +1,6 @@
 /* Validate moves, save/load & undo/redo */
 #include <ncurses.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
@@ -167,7 +168,7 @@ void save_game()
     char *file_name = file_name_prompt();
 
     // Save game data
-    if (file_name == NULL || !write_game_data(file_name))    // No file name or Not saved correctly
+    if (strlen(file_name) == 0 || !write_game_data(file_name))    // No file name or Not saved correctly
     {
         print_error(8, 1);
         resize_or_quit(getch());
@@ -193,7 +194,7 @@ void save_game()
 }
 
 // Prompt user for a file name
-// Returns name of file to open
+// Returns name of file to open or an empty string
 char *file_name_prompt()
 {
     const int MAX_INPUT_SIZE = 40;
@@ -202,14 +203,14 @@ char *file_name_prompt()
     getmaxyx(main_win, ROWS, COLS);
 
     // Print warning & prompt
-    char *prompt  = "Enter A file name";
-    char *press   = "Press ENTER to proceed";
+    char *prompt[]  = {"Enter file name - Alphanumeric characters only",
+                       "Press ENTER to proceed"};
 
     wclear(main_win);
     box(main_win, 0, 0);
 
-    mvwprintw(main_win, (ROWS - 7) / 2, (COLS - strlen(prompt))/ 2, "%s", prompt);
-    mvwprintw(main_win, (ROWS - 5) / 2, (COLS - strlen(press))/ 2, "%s", press);
+    mvwprintw(main_win, (ROWS - 5) / 2, (COLS - strlen(prompt[0]))/ 2, "%s", prompt[0]);
+    mvwprintw(main_win, (ROWS - 7) / 2, (COLS - strlen(prompt[1]))/ 2, "%s", prompt[1]);
 
     wrefresh(main_win);
 
@@ -221,27 +222,63 @@ char *file_name_prompt()
     inner_box = newwin(1, MAX_INPUT_SIZE, (ROWS - 1) / 2, (COLS - MAX_INPUT_SIZE) / 2);
 
     box(outer_box, 0, 0);
-    wrefresh(inner_box);
     wrefresh(outer_box);
+    wrefresh(inner_box);
 
     // Take input
-    echo();
-    nocbreak();
     curs_set(1);
+    keypad(inner_box, FALSE);
 
-    char ch;
-    char input_str[MAX_INPUT_SIZE];
+    int ch;
     int char_counter = 0;
-    while ((ch = mvwgetch(inner_box, 0, 0)) != '\n')
+    char input_str[MAX_INPUT_SIZE];
+
+    while ((ch = wgetch(inner_box)) != 10)
     {
-        input_str[char_counter++] = ch;
+        wmove(inner_box, 0, char_counter);
+
+        // If terminal is resized -> abort
+        if (ch == KEY_RESIZE)
+        {
+            delwin(inner_box);
+            delwin(outer_box);
+            curs_set(0);
+            adjust_windows();
+            return "";
+        }
+
+        // Delete character
+        if ((ch == KEY_BACKSPACE || ch == KEY_DC || ch == 127) && (char_counter > 0))
+        {
+            char_counter--;
+        }
+        // Add alphanumeric character
+        else if ((isalpha(ch) || isdigit(ch)) && char_counter < MAX_INPUT_SIZE)
+        {
+            input_str[char_counter++] = ch;
+        }
+
+        // Print character array until cursor position
+        wclear(inner_box);
+        for (int i = 0; i < char_counter; i++)
+        {
+            mvwaddch(inner_box, 0, i, input_str[i]);
+            wrefresh(inner_box);
+        }
     }
 
     input_str[MAX_INPUT_SIZE] = '\0';
 
+    if (char_counter == 0)
+    {
+        delwin(inner_box);
+        delwin(outer_box);
+        curs_set(0);
+        return "";
+    }
+
     // Create a new string with the exact size to return
     char *file_name = (char *) malloc(char_counter *sizeof(char));
-
     for (int i = 0; i < char_counter; i++)
     {
         file_name[i] = input_str[i];
@@ -249,8 +286,8 @@ char *file_name_prompt()
 
     file_name[char_counter] = '\0';
 
-    noecho();
-    cbreak();
+    delwin(inner_box);
+    delwin(outer_box);
     curs_set(0);
 
     return file_name; 
@@ -267,7 +304,7 @@ int write_game_data(char *file_name)
     char *dir_name = "saved-games/";
     char *file = (char *) malloc((strlen(dir_name) + strlen(file_name)) * sizeof(char));    
 
-    strcat(strcat(file, dir_name), file_name);
+    strcat(strcpy(file, dir_name), file_name);
 
     // Create a directory to save games to (if non-existant)
     struct stat st;
@@ -342,29 +379,33 @@ void write_node(node *node_to_write, FILE *game_file)
 // Returns 1: loaded correctly, 0: otherwise
 int load_game()
 {
+    // Prompt user for file name
+    char *file_name = file_name_prompt();
+
+    if (strlen(file_name) == 0)
+    {
+        print_error(10, 1);
+        resize_or_quit(getch());
+
+        return 0;
+    }
+
+    // Append directory name to file name
+    char *dir_name = "saved-games/";
+    char *file = (char *) malloc((strlen(dir_name) + strlen(file_name)) * sizeof(char));
+
+    strcat(strcpy(file, dir_name), file_name);
+
+    // Open file
     FILE *game_file;
+    game_file = fopen(file, "r");
+    if (game_file == NULL)
+    {
+        print_error(9, 1);
+        resize_or_quit(getch());
 
-    do {
-        // Prompt user for file name
-        char *file_name = file_name_prompt();
-
-        // Append directory name to file name
-        char *dir_name = "saved-games/";
-        char *file = (char *) malloc((strlen(dir_name) + strlen(file_name)) * sizeof(char));
-
-        strcat(strcat(file, dir_name), file_name);
-
-        // Open file
-        game_file = fopen(file, "r");
-        if (game_file == NULL)
-        {
-            print_error(9, 1);
-            resize_or_quit(getch());
-        }
-
-        free(file_name);
-        free(file);
-    }while (game_file == NULL);
+        return 0;
+    }
 
     // Check game data
     int number_of_nodes;
@@ -381,6 +422,8 @@ int load_game()
         return 0;
     }
 
+    free(file);
+    free(file_name);
     fclose(game_file);
 
     return 1;
