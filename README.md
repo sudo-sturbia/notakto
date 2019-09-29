@@ -1,41 +1,57 @@
 # notakto
 > 3-board notakto in C and ncurses.
 
-## Table of contents:
+![preview](images/preview.png)
+
+## Contents
 - [What is notakto?](#info)
 - [Installing](#install)
 - [Features](#features)
 
 ## What is notakto? <a name = "info"></a>
-notakto is tic tac toe where both players use the same symbol, **X**.
+Notakto is tic tac toe where both players use the same symbol, **X**.
 
 The objective of the game is to avoid making three Xs in a row (vertical, horizontal or diagonal.)
 
-Play ends when every board has **three-in-a-row**. The player that completes the **last** three-in-a-row is the **loser**.
+Play ends when every board has **three-in-a-row**. The player that completes the **last** three-in-a-row on the last board is the **loser**.
 
 For more about game strategy and how to play, check [The Secrets of Notakto: Winning at X-only Tic-Tac-Toe](https://arxiv.org/pdf/1301.1672.pdf)
 
 ## Installing <a name = "install"></a>
-Install dependency `ncurses`, in Debian/Ubuntu:
+1. Install `ncurses` library, in Debian / Ubuntu : 
 
-    [sudo] apt install libncurses5-dev
+    `[sudo] apt install libncurses5-dev`
 
-To make run: 
+2. Clone repositry:
 
-    cd src && make
+    `git clone https://github.com/sudo-sturbia/notakto.git`
 
-Inside src directory, run:
+3. Compile game using makefile:
+    
+    `cd notakto/src && make`
 
-    ./notakto
+4. Finally, to play:
+
+    `./notakto`
 
 ## Features <a name = "features"></a>
-- A simple, easy-to-use layout with usage instructions displayed on screen at all times. 
-- A **game engine** to test your skills against. 
-- Has two playing modes:
-    - **Two player mode**: play against a friend (or yourself.)
-    - **vs the machine**: play against playing engine.
-- **Supports:**
-    - Easy navigation using `h j k l` or `< v ^ >`
-    - Undo / Redo for all moves.
-    - Saving / Loading.
-    - Restart / quit at any point.
+### Modes
+The game features two playing modes
+
+- TWO PLAYERS: where two users can challenge each other.
+- PLAY vs THE MACHINE: where you can test your skills against a ***playing engine*** created for the game.
+
+### Controls
+- <kbd>h</kbd> <kbd>j</kbd> <kbd>k</kbd> <kbd>l</kbd> or <kbd><</kbd> <kbd>v</kbd> <kbd>^</kbd> <kbd>></kbd> for movement.
+- <kbd>s</kbd> to use side menu (used for moving between windows).
+- <kbd>q</kbd> to quit.
+
+### Supported features
+Other supported features include:
+
+- Saving / Loading for unlimited number of games.
+- Undo / Redo for any move throughout the game.
+- Detection & handling of terminal resizing.
+- Display playing stats for session.
+
+Options are available through the menu.
